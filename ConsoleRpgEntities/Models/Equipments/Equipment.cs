@@ -1,20 +1,32 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using static ConsoleRpgEntities.Models.Equipments.Enums;
 
 namespace ConsoleRpgEntities.Models.Equipments;
 
-public class Equipment
+public class Equipment : Item
 {
-    public int Id { get; set; }
+    
+    public Enums.EquipmentType Type { get; set; }
+    public Enums.EquipmentSlot? Slot { get; set; }
 
-    // SQL Server enforces cascading delete rules strictly
-    // so Entity Framework will assume DeleteBehavior.Cascade for relationships
-    public int? WeaponId { get; set; }  // Nullable to avoid cascade issues
-    public int? ArmorId { get; set; }   // Nullable to avoid cascade issues
+    public void ListEquipment(Dictionary<Enums.EquipmentSlot, Equipment> equipped)
+    {
+        foreach (Enums.EquipmentSlot slot in Enum.GetValues(typeof(Enums.EquipmentSlot)))
+        {
+            if (equipped.TryGetValue(slot, out var item))
+                Console.WriteLine($"{slot}: {item.Name}");
+            else
+                Console.WriteLine($"{slot}: none");
+        }
+    }
 
-    // Navigation properties
-    [ForeignKey("WeaponId")]
-    public virtual Item Weapon { get; set; }
+    public override string ToString()
+    {
+        string stat = Type == EquipmentType.Attack ? $"Attack: {Value}" : $"Defense: {Value}";
+        return $"{Name} (Equipment, Slot: {Slot}, {stat})";
+    }
 
-    [ForeignKey("ArmorId")]
-    public virtual Item Armor { get; set; }
+
 }
+
+

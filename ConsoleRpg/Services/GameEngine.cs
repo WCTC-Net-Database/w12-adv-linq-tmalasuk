@@ -3,6 +3,7 @@ using ConsoleRpgEntities.Data;
 using ConsoleRpgEntities.Models.Attributes;
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
+using ConsoleRpgEntities.Models.Equipments;
 
 namespace ConsoleRpg.Services;
 
@@ -14,6 +15,7 @@ public class GameEngine
 
     private IPlayer _player;
     private IMonster _goblin;
+    private List<Item> _masterItemList;
 
     public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager)
     {
@@ -38,7 +40,8 @@ public class GameEngine
         {
             _outputManager.WriteLine("Choose an action:", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Attack");
-            _outputManager.WriteLine("2. Quit");
+            _outputManager.WriteLine("2. Inventory");
+            _outputManager.WriteLine("3. Quit");
 
             _outputManager.Display();
 
@@ -50,6 +53,16 @@ public class GameEngine
                     AttackCharacter();
                     break;
                 case "2":
+                    if (_player is Player player)
+                    {
+                        player.ManageItems();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Character not of valid type");
+                    }
+                    break;
+                case "3":
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
                     _outputManager.Display();
                     Environment.Exit(0);
@@ -74,6 +87,41 @@ public class GameEngine
     {
         _player = _context.Players.FirstOrDefault();
         _outputManager.WriteLine($"{_player.Name} has entered the game.", ConsoleColor.Green);
+        _masterItemList = _context.Items.ToList();
+        
+        // Make sure _player.Inventory is not null
+        if (_player is Player player)
+        {
+            if (player.Inventory == null)
+            {
+                player.Inventory = new Inventory
+                {
+                    PlayerId = player.Id,
+                    Items = new List<Item>()
+                };
+            }
+
+            // Randomly select 3 items
+            var rand = new Random();
+            var randomItems = _masterItemList
+                .OrderBy(x => rand.Next()) // shuffle the list
+                .Take(3) // take 3 items
+                .ToList();
+
+            // Add them to the player's inventory
+            foreach (var item in randomItems)
+            {
+                player.Inventory.Items.Add(item);
+            }
+            
+
+            // Optional: output to console
+            foreach (var item in randomItems)
+            {
+                _outputManager.WriteLine($"{player.Name} received {item.Name}.", ConsoleColor.Yellow);
+            }
+        }
+
 
         // Load monsters into random rooms 
         LoadMonsters();

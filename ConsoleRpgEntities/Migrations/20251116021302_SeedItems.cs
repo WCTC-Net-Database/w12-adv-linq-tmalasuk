@@ -4,13 +4,16 @@
 
 namespace ConsoleRpgEntities.Migrations
 {
-    public partial class SeedEquipment : BaseMigration
+    /// <inheritdoc />
+    public partial class SeedItems : BaseMigration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             RunSql(migrationBuilder);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             RunSqlRollback(migrationBuilder);
