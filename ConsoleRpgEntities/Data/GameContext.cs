@@ -22,7 +22,7 @@ namespace ConsoleRpgEntities.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\MSSQLLocalDB;Database=GameDb2;Trusted_Connection=True;");
+                "Server=(localdb)\\MSSQLLocalDB;Database=GameDb4;Trusted_Connection=True;");
         }
 
 
@@ -44,6 +44,11 @@ namespace ConsoleRpgEntities.Data
                 .WithMany(a => a.Players)
                 .UsingEntity(j => j.ToTable("PlayerAbilities"));
 
+            modelBuilder.Entity<Player>()
+                .HasOne(p => p.Inventory)
+                .WithOne(i => i.Player)
+                .HasForeignKey<Inventory>(i => i.PlayerId);
+
             // Call the separate configuration method to set up Equipment entity relationships
             ConfigureEquipmentRelationships(modelBuilder);
 
@@ -52,12 +57,24 @@ namespace ConsoleRpgEntities.Data
 
         private void ConfigureEquipmentRelationships(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Player>()
-                .HasOne(p => p.Inventory)
-                .WithOne(i => i.Player)
-                .HasForeignKey<Player>(p => p.InventoryId);
+            base.OnModelCreating(modelBuilder);
 
-            
+            modelBuilder.Entity<Item>()
+                .Property(i => i.ItemCategory)
+                .HasConversion<string>()
+                .HasColumnName("ItemCategory");
+
+            modelBuilder.Entity<Item>()
+                  .HasDiscriminator<string>("ItemCategory")
+                  .HasValue<Equipment>("Equipment")
+                  .HasValue<Consumable>("Consumable");
+
+            modelBuilder.Entity<Equipment>().Property(i => i.EquipmentType).HasConversion<string>().HasColumnName("EquipmentType");
+            modelBuilder.Entity<Equipment>().Property(i => i.Slot).HasConversion<string>().HasColumnName("EquipmentSlot");
+            modelBuilder.Entity<Consumable>().Property(i => i.ConsumableType).HasConversion<string>().HasColumnName("ConsumableType");
+
+
+
         }
     }
 }

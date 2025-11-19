@@ -11,7 +11,9 @@ public abstract class Item
     public string Name { get; set; }
     // Use one or the other depending on item
 
-    public Enums.ItemCategory Type { get; set; }
+    public static readonly string ColumnFormat = "{0,-25}{1,-12}{2,-10}{3,-20}{4,6:F2}";
+
+    public required string ItemCategory { get; set; }
 
 
     [Column(TypeName = "decimal(3, 2)")]
@@ -21,6 +23,14 @@ public abstract class Item
 
     public override string ToString()
     {
-        return Name;
+        
+        return string.Format(
+            ColumnFormat,
+            Name,
+            ItemCategory,
+            "-",       // slot
+            "-",       // stat
+            Weight
+        );
     }
 }

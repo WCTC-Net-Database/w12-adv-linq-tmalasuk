@@ -1,4 +1,5 @@
-﻿using ConsoleRpgEntities.Models.Characters;
+﻿using ConsoleRpgEntities.Migrations;
+using ConsoleRpgEntities.Models.Characters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,14 @@ namespace ConsoleRpgEntities.Models.Equipments
         // Navigation properties
         public virtual Player Player { get; set; }
         public virtual ICollection<Item> Items { get; set; }
+
+        public decimal InventoryWeight
+        {
+            get
+            {
+                return Items?.Sum(i => i.Weight) ?? 0;
+            }
+        }
     }
 
 }

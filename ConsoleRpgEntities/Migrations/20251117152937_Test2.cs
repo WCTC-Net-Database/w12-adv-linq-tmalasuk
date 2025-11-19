@@ -5,7 +5,7 @@
 namespace ConsoleRpgEntities.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedItems : BaseMigration
+    public partial class Test2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,7 +16,7 @@ namespace ConsoleRpgEntities.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            
+           
         }
     }
 }

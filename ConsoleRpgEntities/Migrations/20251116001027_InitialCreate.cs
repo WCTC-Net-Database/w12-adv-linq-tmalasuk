@@ -62,12 +62,14 @@ namespace ConsoleRpgEntities.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    Weight = table.Column<decimal>(type: "decimal(3,2)", nullable: false),
+                    ItemCategory = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Weight = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     Value = table.Column<int>(type: "int", nullable: false),
-                    Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EquipmentType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EquipmentSlot = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConsumableType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     InventoryId = table.Column<int>(type: "int", nullable: true),
-                    Slot = table.Column<int>(type: "int", nullable: true)
+                    BuffDuration = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -88,7 +90,6 @@ namespace ConsoleRpgEntities.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Experience = table.Column<int>(type: "int", nullable: false),
                     Health = table.Column<int>(type: "int", nullable: false),
-                    EquipmentId = table.Column<int>(type: "int", nullable: true),
                     InventoryId = table.Column<int>(type: "int", nullable: true),
                     EquippedJson = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },

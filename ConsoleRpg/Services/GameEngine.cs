@@ -40,7 +40,7 @@ public class GameEngine
         {
             _outputManager.WriteLine("Choose an action:", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Attack");
-            _outputManager.WriteLine("2. Inventory");
+            _outputManager.WriteLine("2. Items");
             _outputManager.WriteLine("3. Quit");
 
             _outputManager.Display();
@@ -83,6 +83,8 @@ public class GameEngine
         }
     }
 
+
+
     private void SetupGame()
     {
         _player = _context.Players.FirstOrDefault();
@@ -105,7 +107,7 @@ public class GameEngine
             var rand = new Random();
             var randomItems = _masterItemList
                 .OrderBy(x => rand.Next()) // shuffle the list
-                .Take(3) // take 3 items
+                .Take(10) // take 3 items
                 .ToList();
 
             // Add them to the player's inventory

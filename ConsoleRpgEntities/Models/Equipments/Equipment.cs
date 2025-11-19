@@ -6,7 +6,7 @@ namespace ConsoleRpgEntities.Models.Equipments;
 public class Equipment : Item
 {
     
-    public Enums.EquipmentType Type { get; set; }
+    public Enums.EquipmentType EquipmentType { get; set; }
     public Enums.EquipmentSlot? Slot { get; set; }
 
     public void ListEquipment(Dictionary<Enums.EquipmentSlot, Equipment> equipped)
@@ -22,9 +22,26 @@ public class Equipment : Item
 
     public override string ToString()
     {
-        string stat = Type == EquipmentType.Attack ? $"Attack: {Value}" : $"Defense: {Value}";
-        return $"{Name} (Equipment, Slot: {Slot}, {stat})";
+        string stat;
+        if (EquipmentType == Enums.EquipmentType.Attack)
+        {
+            stat = $"Attack Power: {Value}";
+        }
+        else // Defense
+        {
+            stat = $"Defense Power: {Value}";
+        }
+
+        return string.Format(
+            ColumnFormat,
+            Name,
+            ItemCategory,
+            Slot.ToString(),
+            stat,
+            Weight
+        );
     }
+
 
 
 }
