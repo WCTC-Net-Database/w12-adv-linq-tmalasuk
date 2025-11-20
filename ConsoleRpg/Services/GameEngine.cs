@@ -10,8 +10,9 @@ namespace ConsoleRpg.Services;
 public class GameEngine
 {
     private readonly GameContext _context;
-    private readonly MenuManager _menuManager;
+    private MenuManager _menuManager;
     private readonly OutputManager _outputManager;
+    private InventoryManager _inventoryManager;
 
     private IPlayer _player;
     private IMonster _goblin;
@@ -38,11 +39,12 @@ public class GameEngine
 
         while (true)
         {
+            _outputManager.Clear();
             _outputManager.WriteLine("Choose an action:", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Attack");
             _outputManager.WriteLine("2. Items");
             _outputManager.WriteLine("3. Quit");
-
+ 
             _outputManager.Display();
 
             var input = Console.ReadLine();
@@ -53,14 +55,8 @@ public class GameEngine
                     AttackCharacter();
                     break;
                 case "2":
-                    if (_player is Player player)
-                    {
-                        player.ManageItems();
-                    }
-                    else
-                    {
-                        Console.WriteLine("Character not of valid type");
-                    }
+                    _outputManager.Clear();
+                    _menuManager.ItemMenu();
                     break;
                 case "3":
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
@@ -78,6 +74,7 @@ public class GameEngine
     {
         if (_goblin is ITargetable targetableGoblin)
         {
+            _outputManager.Clear();
             _player.Attack(targetableGoblin);
             _player.UseAbility(_player.Abilities.First(), targetableGoblin);
         }
@@ -122,8 +119,11 @@ public class GameEngine
             {
                 _outputManager.WriteLine($"{player.Name} received {item.Name}.", ConsoleColor.Yellow);
             }
-        }
 
+            SetupManagers();
+            
+        }
+        
 
         // Load monsters into random rooms 
         LoadMonsters();
@@ -136,6 +136,17 @@ public class GameEngine
     private void LoadMonsters()
     {
         _goblin = _context.Monsters.OfType<Goblin>().FirstOrDefault();
+    }
+
+    private void SetupManagers()
+    {
+        // Ensure _player is already initialized
+        if (_player is Player player)
+        {
+            
+            _inventoryManager = new InventoryManager(player);
+            _menuManager = new MenuManager(_outputManager, _inventoryManager);
+        }
     }
 
 }

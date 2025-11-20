@@ -36,6 +36,7 @@ public class Equipment : Item
             ColumnFormat,
             Name,
             ItemCategory,
+            EquipmentType.ToString(),
             Slot.ToString(),
             stat,
             Weight

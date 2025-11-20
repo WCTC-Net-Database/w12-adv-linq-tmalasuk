@@ -11,7 +11,8 @@ public abstract class Item
     public string Name { get; set; }
     // Use one or the other depending on item
 
-    public static readonly string ColumnFormat = "{0,-25}{1,-12}{2,-10}{3,-20}{4,6:F2}";
+    public static readonly string ColumnFormat = "{0,-25}{1,-12}{2,-12}{3,-10}{4,-20}{5,6:F2}";
+
 
     public required string ItemCategory { get; set; }
 
@@ -28,6 +29,7 @@ public abstract class Item
             ColumnFormat,
             Name,
             ItemCategory,
+            "-",        //specific type
             "-",       // slot
             "-",       // stat
             Weight

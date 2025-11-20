@@ -3,6 +3,7 @@ using ConsoleRpg.Helpers;
 using ConsoleRpg.Services;
 using ConsoleRpgEntities.Data;
 using ConsoleRpgEntities.Helpers;
+using ConsoleRpgEntities.Models.Characters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,8 +47,12 @@ public static class Startup
 
 
         // Register your services
-        services.AddTransient<GameEngine>();
+        services.AddTransient<Player>();
+        services.AddTransient<InventoryManager>();
         services.AddTransient<MenuManager>();
-        services.AddSingleton<OutputManager>();
+        services.AddTransient<OutputManager>();
+        services.AddTransient<GameEngine>();
+
+
     }
 }

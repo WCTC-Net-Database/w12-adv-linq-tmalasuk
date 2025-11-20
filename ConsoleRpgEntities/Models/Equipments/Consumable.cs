@@ -15,7 +15,7 @@ public class Consumable : Item
 
     public override string ToString()
     {
-        string stat = $"{ConsumableType}: {Value}";
+        string stat = $"{Value}";
         if (this.ConsumableType != ConsumableType.Heal){
             stat += $" / {BuffDuration} turns";
         }
@@ -24,6 +24,7 @@ public class Consumable : Item
             ColumnFormat,
             Name,
             ItemCategory,
+            ConsumableType.ToString(),
             "-",      // no slot
             stat,
             Weight
