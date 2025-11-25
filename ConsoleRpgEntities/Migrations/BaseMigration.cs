@@ -15,7 +15,7 @@ namespace ConsoleRpgEntities.Migrations
 
             // Execute the SQL script
             migrationBuilder.Sql(sql);
-            
+
         }
 
         protected void RunSqlRollback(MigrationBuilder migrationBuilder)
@@ -28,7 +28,7 @@ namespace ConsoleRpgEntities.Migrations
 
             // Execute the SQL script
             migrationBuilder.Sql(sql);
-            
+
         }
     }
 }

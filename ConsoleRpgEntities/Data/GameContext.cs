@@ -2,7 +2,11 @@
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
 using ConsoleRpgEntities.Models.Equipments;
+using ConsoleRpgEntities.Models.Items;
+using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection;
 
 
 namespace ConsoleRpgEntities.Data
@@ -15,6 +19,8 @@ namespace ConsoleRpgEntities.Data
         public DbSet<Item> Items { get; set; }
         public DbSet<Equipment> Equipments { get; set; }
 
+        public DbSet<Room> Rooms { get; set; }
+
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
         }
@@ -22,21 +28,103 @@ namespace ConsoleRpgEntities.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\MSSQLLocalDB;Database=GameDb4;Trusted_Connection=True;");
+                "Server=(localdb)\\MSSQLLocalDB;Database=GameDb;Trusted_Connection=True;");
         }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            //Configure Room TPH
+            //modelBuilder.Entity<Room>()
+            //.HasOne(r => r.North)
+            //.WithOne()
+            //.HasForeignKey<Room>(r => r.Id);
+
+            //modelBuilder.Entity<Room>()
+            //.HasOne(r => r.East)
+            //.WithOne()
+            //.HasForeignKey<Room>(r => r.Id);
+
+            //modelBuilder.Entity<Room>()
+            //.HasOne(r => r.South)
+            //.WithOne()
+            //.HasForeignKey<Room>(r => r.Id);
+
+            //modelBuilder.Entity<Room>()
+            //.HasOne(r => r.West)
+            //.WithOne()
+            //.HasForeignKey<Room>(r => r.Id);
+
+            //modelBuilder.Entity<Room>()
+            //.HasOne(r => r.Up)
+            //.WithOne()
+            //.HasForeignKey<Room>(r => r.Id);
+
+            //modelBuilder.Entity<Room>()
+            //.HasOne(r => r.Down)
+            //.WithOne()
+            //.HasForeignKey<Room>(r => r.Id);
+
+            modelBuilder.Entity<Room>()
+            .HasDiscriminator<string>("RoomType")
+            .HasValue<Dungeon>("Dungeon")
+            .HasValue<TortureChamber>("TortureChamber")
+            .HasValue<Stairwell>("Stairwell")
+            .HasValue<GuardRoom>("GuardRoom")
+            .HasValue<Barracks>("Barracks")
+            .HasValue<Scullery>("Scullery")
+            .HasValue<Armory>("Armory")
+            .HasValue<Garden>("Garden")
+            .HasValue<Hallway>("Hallway");
+
+            modelBuilder.Entity<Spellbook>().HasOne(s => s.GrantedAbility)
+               .WithMany()
+               .HasForeignKey(s => s.GrantedAbilityId);
+
             // Configure TPH for Character hierarchy
             modelBuilder.Entity<Monster>()
                 .HasDiscriminator<string>(m=> m.MonsterType)
                 .HasValue<Goblin>("Goblin");
 
-            // Configure TPH for Ability hierarchy
+            
+            modelBuilder.Entity<Ability>().HasKey(a => a.Id);
             modelBuilder.Entity<Ability>()
-                .HasDiscriminator<string>(pa=>pa.AbilityType)
-                .HasValue<ShoveAbility>("ShoveAbility");
+                .HasDiscriminator<string>("AbilityType")
+                .HasValue<ArcaneBarrage>("Arcane")
+                .HasValue<NatureEmbrace>("Healing")
+                .HasValue<NullifyingAegis>("Defensive")
+                .HasValue<ShadowVeil>("Physical")
+                .HasValue<SiphoningStrike>("Hybrid");
+
+
+            modelBuilder.Entity<Room>()
+            .HasDiscriminator<string>("RoomType") // <-- Use your existing column
+            .HasValue<Armory>("Armory")
+            .HasValue<TortureChamber>("Torture Chamber")
+            .HasValue<Hallway>("Hallway")
+            .HasValue<Barracks>("Barracks")
+            .HasValue<Dungeon>("Dungeon")
+            .HasValue<Garden>("Garden")
+            .HasValue<GuardRoom>("Guard Area")
+            .HasValue<Scullery>("Scullery")
+            .HasValue<Stairwell>("Stairwell");
+
+            modelBuilder.Entity<Dungeon>()
+                .Property(d => d.IsLocked)
+                .HasDefaultValue(true);
+
+            modelBuilder.Entity<Dungeon>()
+                .Property(d => d.KeyFormed)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<Dungeon>()
+                .Property(d => d.StoneGrabbed)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<Dungeon>()
+                .Property(d => d.CrackFound)
+                .HasDefaultValue(false);
+
 
             // Configure many-to-many relationship
             modelBuilder.Entity<Player>()
@@ -48,6 +136,11 @@ namespace ConsoleRpgEntities.Data
                 .HasOne(p => p.Inventory)
                 .WithOne(i => i.Player)
                 .HasForeignKey<Inventory>(i => i.PlayerId);
+
+            modelBuilder.Entity<Player>()
+                .Property(p => p.classType)
+                .HasConversion<string>()
+                .HasColumnName("ClassType");
 
             // Call the separate configuration method to set up Equipment entity relationships
             ConfigureEquipmentRelationships(modelBuilder);
@@ -73,7 +166,8 @@ namespace ConsoleRpgEntities.Data
             modelBuilder.Entity<Equipment>().Property(i => i.Slot).HasConversion<string>().HasColumnName("EquipmentSlot");
             modelBuilder.Entity<Consumable>().Property(i => i.ConsumableType).HasConversion<string>().HasColumnName("ConsumableType");
 
-
+            
+           
 
         }
     }

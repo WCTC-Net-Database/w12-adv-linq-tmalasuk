@@ -3,6 +3,7 @@ using ConsoleRpgEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleRpgEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20251123214340_fixRoom")]
+    partial class fixRoom
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -373,32 +376,15 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
-                    b.HasDiscriminator().HasValue("Barracks");
+                    b.HasDiscriminator().HasValue("Library");
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Rooms.Dungeon", b =>
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
-                    b.Property<bool>("CrackFound")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsLocked")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool>("KeyFormed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("StoneGrabbed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("bit");
 
                     b.HasDiscriminator().HasValue("Dungeon");
                 });

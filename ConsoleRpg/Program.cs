@@ -1,4 +1,6 @@
-﻿using ConsoleRpg.Services;
+﻿using ConsoleRpg.Helpers;
+using ConsoleRpg.Helpers.Menus;
+using ConsoleRpg.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ConsoleRpg;
@@ -13,6 +15,7 @@ public static class Program
         var serviceProvider = serviceCollection.BuildServiceProvider();
 
         var gameEngine = serviceProvider.GetService<GameEngine>();
+
         gameEngine?.Run();
     }
 }

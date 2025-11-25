@@ -1,152 +1,119 @@
 ﻿using ConsoleRpg.Helpers;
+using ConsoleRpg.Helpers.EntityHelper;
+using ConsoleRpg.Helpers.Menus;
 using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Data.Seeding;
 using ConsoleRpgEntities.Models.Attributes;
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
 using ConsoleRpgEntities.Models.Equipments;
+using ConsoleRpgEntities.Models.Rooms;
+using ConsoleRpgEntities.Models.Rooms.Interfaces;
 
 namespace ConsoleRpg.Services;
 
 public class GameEngine
 {
     private readonly GameContext _context;
-    private MenuManager _menuManager;
+    private MainMenu _menuManager;
     private readonly OutputManager _outputManager;
     private InventoryManager _inventoryManager;
-
-    private IPlayer _player;
+    private PlayerManager _playerManager;
+    private GameLoopMenu _gameLoopMenu;
+    private Player _player;
     private IMonster _goblin;
     private List<Item> _masterItemList;
+    private readonly  RoomSeeder _roomSeeder;
 
-    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager)
+    public GameEngine(GameContext context, MainMenu mainMenu, OutputManager outputManager, PlayerManager playerManager, GameLoopMenu gameLoop, RoomSeeder roomseeder)
     {
-        _menuManager = menuManager;
+        _gameLoopMenu = gameLoop;
+        _menuManager = mainMenu;
         _outputManager = outputManager;
         _context = context;
+        _playerManager = playerManager;
+        _roomSeeder = roomseeder;
     }
 
     public void Run()
     {
-        if (_menuManager.ShowMainMenu())
+        bool startGame = false;
+
+        while (!startGame)
         {
-            SetupGame();
+            startGame = _menuManager.ShowMainMenu();
         }
+
+        SetupGame(); 
     }
+
+
 
     private void GameLoop()
     {
-        _outputManager.Clear();
+        // give player 5 items
+        List<Item> allItems = _context.Items.ToList();
+        Random random = new Random();
+        List<Item> randomItems = allItems
+            .OrderBy(item => random.Next()) 
+            .Take(5)
+            .ToList();
 
-        while (true)
+        List<Item> monsterItems = _context.Items.ToList().OrderBy(item => random.Next()).ToList();
+        Monster[] monsterArray= _context.Monsters.ToArray();
+
+
+        foreach (Item item in randomItems)
         {
-            _outputManager.Clear();
-            _outputManager.WriteLine("Choose an action:", ConsoleColor.Cyan);
-            _outputManager.WriteLine("1. Attack");
-            _outputManager.WriteLine("2. Items");
-            _outputManager.WriteLine("3. Quit");
- 
-            _outputManager.Display();
+            _playerManager.Player.Inventory.Items.Add(item);
+        }
 
-            var input = Console.ReadLine();
+        // add items to monsters 
+        for (int i = 0; i < monsterArray.Count() ; i++)
+        {
+            var monster = monsterArray[i];
+            var item = monsterItems[i % monsterItems.Count]; // cycles through items if there are fewer items than monsters
+            monster.itemDrop.Add(item);
+        }
 
-            switch (input)
+        var Rooms = _context.Rooms.ToList();
+        var combatRooms = Rooms.OfType<ICombatRoom>().ToList();
+        int roomIndex = 0;
+
+        foreach (var monster in monsterArray)
+        {
+            // Cycle through combat rooms if more monsters than rooms
+            var room = combatRooms[roomIndex % combatRooms.Count];
+            if (room is Room actualRoom)
             {
-                case "1":
-                    AttackCharacter();
-                    break;
-                case "2":
-                    _outputManager.Clear();
-                    _menuManager.ItemMenu();
-                    break;
-                case "3":
-                    _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
-                    _outputManager.Display();
-                    Environment.Exit(0);
-                    break;
-                default:
-                    _outputManager.WriteLine("Invalid selection. Please choose 1.", ConsoleColor.Red);
-                    break;
+                actualRoom.MonstersInRoom.Add(monster);
             }
+            roomIndex++;
         }
-    }
 
-    private void AttackCharacter()
-    {
-        if (_goblin is ITargetable targetableGoblin)
+        _roomSeeder.LinkRooms(_context);
+
+        while (_playerManager.Player.Health > 0)
         {
-            _outputManager.Clear();
-            _player.Attack(targetableGoblin);
-            _player.UseAbility(_player.Abilities.First(), targetableGoblin);
+            _gameLoopMenu.MainMenu();
         }
+        
     }
-
 
 
     private void SetupGame()
     {
-        _player = _context.Players.FirstOrDefault();
-        _outputManager.WriteLine($"{_player.Name} has entered the game.", ConsoleColor.Green);
-        _masterItemList = _context.Items.ToList();
-        
-        // Make sure _player.Inventory is not null
-        if (_player is Player player)
-        {
-            if (player.Inventory == null)
-            {
-                player.Inventory = new Inventory
-                {
-                    PlayerId = player.Id,
-                    Items = new List<Item>()
-                };
-            }
-
-            // Randomly select 3 items
-            var rand = new Random();
-            var randomItems = _masterItemList
-                .OrderBy(x => rand.Next()) // shuffle the list
-                .Take(10) // take 3 items
-                .ToList();
-
-            // Add them to the player's inventory
-            foreach (var item in randomItems)
-            {
-                player.Inventory.Items.Add(item);
-            }
-            
-
-            // Optional: output to console
-            foreach (var item in randomItems)
-            {
-                _outputManager.WriteLine($"{player.Name} received {item.Name}.", ConsoleColor.Yellow);
-            }
-
-            SetupManagers();
-            
-        }
-        
-
         // Load monsters into random rooms 
         LoadMonsters();
 
-        // Pause before starting the game loop
-        Thread.Sleep(500);
         GameLoop();
     }
 
     private void LoadMonsters()
     {
-        _goblin = _context.Monsters.OfType<Goblin>().FirstOrDefault();
+        
     }
 
-    private void SetupManagers()
-    {
-        // Ensure _player is already initialized
-        if (_player is Player player)
-        {
-            
-            _inventoryManager = new InventoryManager(player);
-            _menuManager = new MenuManager(_outputManager, _inventoryManager);
-        }
-    }
+    
 
 }

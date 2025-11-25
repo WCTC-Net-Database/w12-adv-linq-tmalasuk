@@ -25,6 +25,13 @@ public class OutputManager
         _outputBuffer.Clear(); // Clear the buffer after displaying
     }
 
+    //TODO: make this method
+    public void DisplayError()
+    {
+        
+
+    }
+
     public void Write(string message, ConsoleColor color = ConsoleColor.White)
     {
         _outputBuffer.Add((message, color));
@@ -41,4 +48,17 @@ public class OutputManager
         Console.Write(message); // Write the message to the console
         Console.ResetColor(); // Reset the console color back to default
     }
+
+    public void ClearBelow(int startRow)
+    {
+        int currentLine = startRow;
+        while (currentLine < Console.WindowHeight)
+        {
+            Console.SetCursorPosition(0, currentLine);
+            Console.Write(new string(' ', Console.WindowWidth));
+            currentLine++;
+        }
+        Console.SetCursorPosition(0, startRow);
+    }
+
 }

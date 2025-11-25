@@ -1,7 +1,13 @@
 ﻿using Castle.Core.Configuration;
 using ConsoleRpg.Helpers;
+using ConsoleRpg.Helpers.Admin;
+using ConsoleRpg.Helpers.Battle;
+using ConsoleRpg.Helpers.EntityHelper;
+using ConsoleRpg.Helpers.Environments;
+using ConsoleRpg.Helpers.Menus;
 using ConsoleRpg.Services;
 using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Data.Seeding;
 using ConsoleRpgEntities.Helpers;
 using ConsoleRpgEntities.Models.Characters;
 using Microsoft.EntityFrameworkCore;
@@ -47,12 +53,24 @@ public static class Startup
 
 
         // Register your services
-        services.AddTransient<Player>();
-        services.AddTransient<InventoryManager>();
-        services.AddTransient<MenuManager>();
-        services.AddTransient<OutputManager>();
-        services.AddTransient<GameEngine>();
+        services.AddSingleton<RoomSeeder>();
+        services.AddSingleton<RoomManager>();
+        services.AddSingleton<AdminBrains>();
+        services.AddSingleton<AdminMenu>();
+        services.AddSingleton<BattleMenu>();
+        services.AddSingleton<PlayerManager>();
+        services.AddSingleton<BattleManager>();
+        services.AddSingleton<MonsterManager>();
+        services.AddSingleton<GameLoopMenu>();
+        services.AddSingleton<InventoryMenu>();
+        services.AddSingleton<MainMenu>();
+        services.AddSingleton<PlayerMenu>();
+        services.AddSingleton<InventoryManager>();
+        services.AddSingleton<OutputManager>();
+        services.AddSingleton<GameContext>();
+        services.AddSingleton<GameEngine>();
 
+        
 
     }
 }

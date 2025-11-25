@@ -9,13 +9,10 @@
   <ItemGroup>
     <Compile Remove="Models\Abilities\MonsterAbilities\**" />
     <Compile Remove="Models\Characters\Npcs\**" />
-    <Compile Remove="Models\Rooms\**" />
     <EmbeddedResource Remove="Models\Abilities\MonsterAbilities\**" />
     <EmbeddedResource Remove="Models\Characters\Npcs\**" />
-    <EmbeddedResource Remove="Models\Rooms\**" />
     <None Remove="Models\Abilities\MonsterAbilities\**" />
     <None Remove="Models\Characters\Npcs\**" />
-    <None Remove="Models\Rooms\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,7 +21,7 @@
     <None Remove="Migrations\Scripts\SeedEquipment.rollback.sql~RF8555f2c5.TMP" />
     <None Remove="Models\Abilities\Ability.cs~RF7a28a58b.TMP" />
     <None Remove="Models\Attributes\ITargetable.cs~RF7fb34c69.TMP" />
-    <None Remove="Models\Equipments\Inventory.cs~RFae3eb4d5.TMP" />
+    <None Remove="Models\Items\Inventory.cs~RFae3eb4d5.TMP" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,9 +31,6 @@
     <Content Include="Migrations\Scripts\InitialSeedData.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-	  <Content Include="Migrations\Scripts\SeedItems.sql">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -58,12 +52,6 @@
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Migrations\Scripts\SeedItems.rollback.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Migrations\Scripts\SeedItems.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
