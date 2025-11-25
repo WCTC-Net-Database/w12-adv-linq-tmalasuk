@@ -16,6 +16,8 @@ namespace ConsoleRpgEntities.Models.Rooms
         public string Name { get; set; }
         public string Description { get; set; }
         public string RoomType { get; set; }
+
+        public int Difficulty { get; set; }
         [NotMapped] public Room? North { get; set; }
         [NotMapped] public Room? South { get; set; }
         [NotMapped] public Room? East { get; set; }

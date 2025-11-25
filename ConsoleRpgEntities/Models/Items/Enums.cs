@@ -6,7 +6,8 @@ public class Enums
     {
         Heal,
         Attack,
-        Defense
+        Defense,
+        Mana
     }
 
     public enum EquipmentType

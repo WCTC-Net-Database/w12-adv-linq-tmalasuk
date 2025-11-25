@@ -5,9 +5,18 @@ namespace ConsoleRpgEntities.Models.Equipments;
 
 public class Equipment : Item
 {
+
+    
     
     public Enums.EquipmentType EquipmentType { get; set; }
     public Enums.EquipmentSlot? Slot { get; set; }
+
+    //TODO: Add cool effects to rare items
+    public string? SpecialType { get; set; }
+
+    public int SpecialValue { get; set; }
+
+    public string? SpecialDescription { get; set; }
 
     public void ListEquipment(Dictionary<Enums.EquipmentSlot, Equipment> equipped)
     {

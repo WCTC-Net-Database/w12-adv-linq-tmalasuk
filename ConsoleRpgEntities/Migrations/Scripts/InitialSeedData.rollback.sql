@@ -2,3 +2,5 @@
 DELETE FROM Abilities;
 DELETE FROM Players;
 DELETE FROM Monsters;
+DELETE FROM Items;
+DELETE FROM Rooms;

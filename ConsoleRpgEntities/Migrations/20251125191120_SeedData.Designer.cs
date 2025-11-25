@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleRpgEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20251123204612_WeightFix")]
-    partial class WeightFix
+    [Migration("20251125191120_SeedData")]
+    partial class SeedData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -104,7 +104,7 @@ namespace ConsoleRpgEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("RoomId")
+                    b.Property<int>("RoomId")
                         .HasColumnType("int");
 
                     b.Property<int>("StunStack")
@@ -209,6 +209,10 @@ namespace ConsoleRpgEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("InventoryId")
                         .HasColumnType("int");
 
@@ -222,6 +226,10 @@ namespace ConsoleRpgEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Rarity")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -255,6 +263,9 @@ namespace ConsoleRpgEntities.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -350,6 +361,15 @@ namespace ConsoleRpgEntities.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("EquipmentSlot");
 
+                    b.Property<string>("SpecialDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpecialType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SpecialValue")
+                        .HasColumnType("int");
+
                     b.HasDiscriminator().HasValue("Equipment");
                 });
 
@@ -383,8 +403,25 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
+                    b.Property<bool>("CrackFound")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsLocked")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("KeyFormed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("StoneGrabbed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.HasDiscriminator().HasValue("Dungeon");
                 });
@@ -400,7 +437,7 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
-                    b.HasDiscriminator().HasValue("GuardRoom");
+                    b.HasDiscriminator().HasValue("Guard Area");
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Rooms.Hallway", b =>
@@ -428,7 +465,7 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
-                    b.HasDiscriminator().HasValue("TortureChamber");
+                    b.HasDiscriminator().HasValue("Torture Chamber");
                 });
 
             modelBuilder.Entity("AbilityPlayer", b =>
@@ -450,7 +487,9 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasOne("ConsoleRpgEntities.Models.Rooms.Room", null)
                         .WithMany("MonstersInRoom")
-                        .HasForeignKey("RoomId");
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Characters.Player", b =>

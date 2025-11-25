@@ -9,7 +9,10 @@ public abstract class Item
 {
     public int Id { get; set; }
     public string Name { get; set; }
-    // Use one or the other depending on item
+
+    public string Rarity { get; set; }
+
+    public string Description { get; set; }
 
     public static readonly string ColumnFormat = "{0,-25}{1,-12}{2,-12}{3,-10}{4,-20}{5,6:F2}";
 

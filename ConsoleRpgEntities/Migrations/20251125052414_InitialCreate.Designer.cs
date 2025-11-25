@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleRpgEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20251123200853_InitialCreate")]
+    [Migration("20251125052414_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -104,7 +104,7 @@ namespace ConsoleRpgEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("RoomId")
+                    b.Property<int>("RoomId")
                         .HasColumnType("int");
 
                     b.Property<int>("StunStack")
@@ -229,7 +229,7 @@ namespace ConsoleRpgEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Weight")
-                        .HasColumnType("decimal(3, 2)");
+                        .HasColumnType("decimal(5, 2)");
 
                     b.HasKey("Id");
 
@@ -383,8 +383,25 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
+                    b.Property<bool>("CrackFound")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsLocked")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("KeyFormed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("StoneGrabbed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.HasDiscriminator().HasValue("Dungeon");
                 });
@@ -400,7 +417,7 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
-                    b.HasDiscriminator().HasValue("GuardRoom");
+                    b.HasDiscriminator().HasValue("Guard Area");
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Rooms.Hallway", b =>
@@ -428,7 +445,7 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasBaseType("ConsoleRpgEntities.Models.Rooms.Room");
 
-                    b.HasDiscriminator().HasValue("TortureChamber");
+                    b.HasDiscriminator().HasValue("Torture Chamber");
                 });
 
             modelBuilder.Entity("AbilityPlayer", b =>
@@ -450,7 +467,9 @@ namespace ConsoleRpgEntities.Migrations
                 {
                     b.HasOne("ConsoleRpgEntities.Models.Rooms.Room", null)
                         .WithMany("MonstersInRoom")
-                        .HasForeignKey("RoomId");
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Characters.Player", b =>

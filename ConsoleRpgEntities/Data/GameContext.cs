@@ -34,36 +34,7 @@ namespace ConsoleRpgEntities.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //Configure Room TPH
-            //modelBuilder.Entity<Room>()
-            //.HasOne(r => r.North)
-            //.WithOne()
-            //.HasForeignKey<Room>(r => r.Id);
-
-            //modelBuilder.Entity<Room>()
-            //.HasOne(r => r.East)
-            //.WithOne()
-            //.HasForeignKey<Room>(r => r.Id);
-
-            //modelBuilder.Entity<Room>()
-            //.HasOne(r => r.South)
-            //.WithOne()
-            //.HasForeignKey<Room>(r => r.Id);
-
-            //modelBuilder.Entity<Room>()
-            //.HasOne(r => r.West)
-            //.WithOne()
-            //.HasForeignKey<Room>(r => r.Id);
-
-            //modelBuilder.Entity<Room>()
-            //.HasOne(r => r.Up)
-            //.WithOne()
-            //.HasForeignKey<Room>(r => r.Id);
-
-            //modelBuilder.Entity<Room>()
-            //.HasOne(r => r.Down)
-            //.WithOne()
-            //.HasForeignKey<Room>(r => r.Id);
+            
 
             modelBuilder.Entity<Room>()
             .HasDiscriminator<string>("RoomType")
@@ -95,6 +66,8 @@ namespace ConsoleRpgEntities.Data
                 .HasValue<NullifyingAegis>("Defensive")
                 .HasValue<ShadowVeil>("Physical")
                 .HasValue<SiphoningStrike>("Hybrid");
+
+            
 
 
             modelBuilder.Entity<Room>()
@@ -146,6 +119,24 @@ namespace ConsoleRpgEntities.Data
             ConfigureEquipmentRelationships(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
+
+            // seed data
+            modelBuilder.ApplyConfiguration(new ArcaneConfig());
+            modelBuilder.ApplyConfiguration(new NatureEmbraceConfig());
+            modelBuilder.ApplyConfiguration(new ShadowVeilConfig());
+            modelBuilder.ApplyConfiguration(new NullifyingAegisConfig());
+            modelBuilder.ApplyConfiguration(new SiphoningStrikeConfig());
+            modelBuilder.ApplyConfiguration(new ConsumableConfig());
+            modelBuilder.ApplyConfiguration(new EquipmentConfig());
+            modelBuilder.ApplyConfiguration(new DungeonConfig());
+            modelBuilder.ApplyConfiguration(new TortureChamberConfig());
+            modelBuilder.ApplyConfiguration(new StairwellConfig());
+            modelBuilder.ApplyConfiguration(new GuardRoomConfig());
+            modelBuilder.ApplyConfiguration(new BarracksConfig());
+            modelBuilder.ApplyConfiguration(new SculleryConfig());
+            modelBuilder.ApplyConfiguration(new ArmoryConfig());
+            modelBuilder.ApplyConfiguration(new GardenConfig());
+            modelBuilder.ApplyConfiguration(new SpellbookConfig());
         }
 
         private void ConfigureEquipmentRelationships(ModelBuilder modelBuilder)

@@ -9,7 +9,7 @@ public class Consumable : Item
 {
     
     public int? BuffDuration { get; set; } // Duration in turns
-    public Enums.ConsumableType ConsumableType { get; set; } // e.g., "Attack", "Defense", "Heal"
+    public Enums.ConsumableType ConsumableType { get; set; } 
     public int TurnUsed { get; set; } = 0;
 
     public override string ToString()

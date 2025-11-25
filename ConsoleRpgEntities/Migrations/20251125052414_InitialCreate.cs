@@ -38,7 +38,10 @@ namespace ConsoleRpgEntities.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RoomType = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
-                    IsLocked = table.Column<bool>(type: "bit", nullable: true)
+                    IsLocked = table.Column<bool>(type: "bit", nullable: true, defaultValue: true),
+                    KeyFormed = table.Column<bool>(type: "bit", nullable: true, defaultValue: false),
+                    StoneGrabbed = table.Column<bool>(type: "bit", nullable: true, defaultValue: false),
+                    CrackFound = table.Column<bool>(type: "bit", nullable: true, defaultValue: false)
                 },
                 constraints: table =>
                 {
@@ -52,11 +55,11 @@ namespace ConsoleRpgEntities.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RoomId = table.Column<int>(type: "int", nullable: false),
                     Difficulty = table.Column<int>(type: "int", nullable: false),
                     Health = table.Column<int>(type: "int", nullable: false),
                     MonsterType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
-                    StunStack = table.Column<int>(type: "int", nullable: false),
-                    RoomId = table.Column<int>(type: "int", nullable: true)
+                    StunStack = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -65,7 +68,8 @@ namespace ConsoleRpgEntities.Migrations
                         name: "FK_Monsters_Rooms_RoomId",
                         column: x => x.RoomId,
                         principalTable: "Rooms",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -151,7 +155,7 @@ namespace ConsoleRpgEntities.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ItemCategory = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
-                    Weight = table.Column<decimal>(type: "decimal(3,2)", nullable: false),
+                    Weight = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     Value = table.Column<int>(type: "int", nullable: false),
                     InventoryId = table.Column<int>(type: "int", nullable: true),
                     MonsterId = table.Column<int>(type: "int", nullable: true),
