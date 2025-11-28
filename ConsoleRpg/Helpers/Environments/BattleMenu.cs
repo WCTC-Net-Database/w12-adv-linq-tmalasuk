@@ -1,4 +1,6 @@
-﻿using ConsoleRpgEntities.Models.Attributes;
+﻿using Castle.Components.DictionaryAdapter.Xml;
+using ConsoleRpg.Helpers.Menus;
+using ConsoleRpgEntities.Models.Attributes;
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
 using System;
@@ -18,122 +20,143 @@ namespace ConsoleRpg.Helpers.Environments
         private int entriesAddedThisRound = 0;
 
 
-        public void RenderBattleHUD(Player player, Monster monster)
+        public void RenderBattleHUD(Player player, Monster monster, OutputManager outputManager)
         {
-            Console.Clear();
+            outputManager.Clear();
             int width = 100;
-            string topBorder = new string('=', width);
             int middle = width / 2;
+            string topBorder = new string('=', width);
+            string reset = "\u001b[0m";
 
-            // Header
-            string playerName = player.Name.PadRight(middle - 1);
-            string monsterName = monster.Name.PadLeft(width - middle - 1);
+            // --- Header: Names ---
+            string playerName = TruncateOrPad(player.Name, middle - 1, padRight: true);
+            string monsterName = TruncateOrPad(monster.Name, width - middle - 1, padRight: false);
             Console.WriteLine(topBorder);
             Console.WriteLine($"|{playerName}{monsterName}|");
 
-            // HP row
-            string playerHp = $"HP: {player.Health}/{player.MaxHealth}".PadRight(middle - 1);
-            string monsterHp = $"HP: {monster.Health}/{monster.MaxHealth}".PadLeft(width - middle - 1);
-            Console.WriteLine($"|{playerHp}{monsterHp}|");
+            // --- HP Row ---
+            string playerHpVisible = $"HP: {player.Health}/{player.MaxHealth}";
+            string monsterHpVisible = $"HP: {monster.Health}/{monster.MaxHealth}";
 
-            // MP / Status row
-            string playerMp = $"MP: {player.Mana}/{player.MaxMana}".PadRight(middle - 1);
-            string monsterStatus = "".PadLeft(width - middle - 1);
-            Console.WriteLine($"|{playerMp}{monsterStatus}|");
+            string pColor = GetHpColor(player.Health, player.MaxHealth);
+            string mColor = GetHpColor(monster.Health, monster.MaxHealth);
 
+            string playerHpText = pColor + playerHpVisible + reset;
+            string monsterHpText = mColor + monsterHpVisible + reset;
+
+            // --- mp row ---
+            string playerMpVisible = $"MP: {player.Mana}/{player.MaxMana}";
+            string mpColor = GetMpColor(player.Mana, player.MaxMana);
+            string playerMpText = mpColor + playerMpVisible + reset;
+
+            // Pad manually to account for ANSI codes
+            playerHpText = PadVisible(playerHpText, middle - 1, padRight: true);
+            monsterHpText = PadVisible(monsterHpText, width - middle - 1, padRight: false);
+            playerMpText = PadVisible(playerMpText, width - 2, padRight: true);
+
+            Console.WriteLine($"|{playerHpText}{monsterHpText}|");
+            Console.WriteLine($"|{playerMpText}|");
             Console.WriteLine(topBorder);
 
-            // Actions
+            // --- Actions ---
             string actions = "Actions: [1] Attack [2] Ability [3] Item";
             Console.WriteLine($"| {actions.PadRight(width - 3)}|");
-
             Console.WriteLine(topBorder);
 
-            // Combat Log
+            // --- Combat Log ---
             Console.WriteLine("| Combat Log:".PadRight(width - 1) + "|");
             int logStartLine = Console.GetCursorPosition().Top;
 
-            // Print all previous log entries instantly
             for (int i = 0; i < _combatLog.Count - entriesAddedThisRound; i++)
             {
-                
-                var entry = _combatLog[i];
-                string message = entry.Message;
+                string message = _combatLog[i].Message;
+
                 bool isSilent = message.StartsWith("[SILENT]");
                 string clean = isSilent ? message.Replace("[SILENT]", "") : message;
                 string line = $"> {clean}";
                 if (line.Length > width - 3) line = line.Substring(0, width - 3);
                 Console.WriteLine($"| {line.PadRight(width - 3)}|");
-                
             }
+
+            // Empty lines for new entries
             for (int i = 0; i < entriesAddedThisRound + 1; i++)
-            {
                 Console.WriteLine($"| {"".PadRight(width - 3)}|");
-            }
 
-            // Bottom border & input prompt
             Console.WriteLine(topBorder);
-            Console.Write(">> "); // input prompt
-            var promptPos = Console.GetCursorPosition();
+            var prePrompt = Console.GetCursorPosition();
 
-            // Animate only the latest entry
-            
+            // --- Animate Latest Entries ---
             if (_combatLog.Count > 0)
             {
                 var newEntries = _combatLog.Skip(Math.Max(0, _combatLog.Count - entriesAddedThisRound)).ToList();
+                int cursorRow = logStartLine + (_combatLog.Count - entriesAddedThisRound);
 
-                int firstAnimatedLine = logStartLine + (_combatLog.Count - entriesAddedThisRound);
-                int cursorRow = firstAnimatedLine;
-
-                foreach (var entry in newEntries)                           
+                foreach (var entry in newEntries)
                 {
-                    string text;
-                    int delay;
-                    if (entry is ValueTuple<string, int> e)
-                    {
-                        text = e.Item1;
-                        delay = e.Item2;
-                    }
-                    else
-                    {
-                        text = entry.ToString();
-                        delay = 20;
-                    }
+                    string text = entry.Message;
+                    int delay = entry.Delay;
+                    
+
                     bool isSilent = text.StartsWith("[SILENT]");
                     string latestClean = isSilent ? text.Replace("[SILENT]", "") : text;
 
                     Console.SetCursorPosition(2, cursorRow);
-
                     if (!isSilent)
-                    {
                         TypeWriterLine(latestClean, width);
-                        Thread.Sleep(delay);
-                    }
                     else
                         Console.Write(latestClean);
-
-                    cursorRow++; 
+                    Thread.Sleep(delay);
+                    cursorRow++;
                 }
             }
-            Console.SetCursorPosition(promptPos.Left, promptPos.Top);
+
+            Console.SetCursorPosition(prePrompt.Left, prePrompt.Top);
+            Console.Write(">> ");
             entriesAddedThisRound = 0;
-
         }
 
+        // --- Helpers ---
 
-        public void AddCombatLog(string message, int delay)
+        // Pads or truncates text to fit desired visible width
+        private string TruncateOrPad(string text, int width, bool padRight = true)
         {
-            _combatLog.Add((message, delay));
-            entriesAddedThisRound++;
-
-            // Remove oldest entry if over the limit
-            while (_combatLog.Count > MaxCombatLogEntries)
-            {
-                _combatLog.RemoveAt(0);
-                
-            }
+            if (text.Length > width)
+                return text.Substring(0, width);
+            return padRight ? text.PadRight(width) : text.PadLeft(width);
         }
 
+        // Pads a string based on visible length (ignores ANSI codes)
+        private string PadVisible(string text, int width, bool padRight = true)
+        {
+            int visibleLength = StripAnsi(text).Length;
+            int padding = width - visibleLength;
+            if (padding <= 0) return text;
+
+            return padRight ? text + new string(' ', padding) : new string(' ', padding) + text;
+        }
+
+        // Remove ANSI codes for length calculation
+        private string StripAnsi(string text)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(text, @"\u001b\[[0-9;]*m", "");
+        }
+
+        // HP color helper
+        private static string GetHpColor(int hp, int max)
+        {
+            double pct = (double)hp / max;
+            if (pct >= 0.7) return "\u001b[32m"; // green
+            if (pct >= 0.3) return "\u001b[33m"; // yellow
+            return "\u001b[31m";                  // red
+        }
+
+        private static string GetMpColor(int mp, int max)
+        {
+            double pct = (double)mp / max;
+            if (pct >= 0.7) return "\u001b[32m"; // green
+            if (pct >= 0.3) return "\u001b[33m"; // yellow
+            return "\u001b[31m";                  // red
+        }
 
         private void TypeWriterLine(string text, int width, int delay = 20)
         {
@@ -152,6 +175,19 @@ namespace ConsoleRpg.Helpers.Environments
             Console.Write("|"); // right border
 
             // do NOT call WriteLine here; move the cursor manually
+        }
+
+        public void AddCombatLog(string message, int delay)
+        {
+            _combatLog.Add((message, delay));
+            entriesAddedThisRound++;
+
+            // Remove oldest entry if over the limit
+            while (_combatLog.Count > MaxCombatLogEntries)
+            {
+                _combatLog.RemoveAt(0);
+
+            }
         }
 
     }

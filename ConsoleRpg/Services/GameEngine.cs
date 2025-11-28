@@ -9,6 +9,7 @@ using ConsoleRpgEntities.Models.Characters.Monsters;
 using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Rooms;
 using ConsoleRpgEntities.Models.Rooms.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleRpg.Services;
 
@@ -51,51 +52,10 @@ public class GameEngine
 
     private void GameLoop()
     {
-        // give player 5 items
-        List<Item> allItems = _context.Items.ToList();
-        Random random = new Random();
-        List<Item> randomItems = allItems
-            .OrderBy(item => random.Next()) 
-            .Take(5)
-            .ToList();
-
-        List<Item> monsterItems = _context.Items.ToList().OrderBy(item => random.Next()).ToList();
-        Monster[] monsterArray= _context.Monsters.ToArray();
-
-
-        foreach (Item item in randomItems)
+        bool running = true;
+        while (running && _playerManager.Player.Health > 0) 
         {
-            _playerManager.Player.Inventory.Items.Add(item);
-        }
-
-        // add items to monsters 
-        for (int i = 0; i < monsterArray.Count() ; i++)
-        {
-            var monster = monsterArray[i];
-            var item = monsterItems[i % monsterItems.Count]; // cycles through items if there are fewer items than monsters
-            monster.itemDrop.Add(item);
-        }
-
-        var Rooms = _context.Rooms.ToList();
-        var combatRooms = Rooms.OfType<ICombatRoom>().ToList();
-        int roomIndex = 0;
-
-        foreach (var monster in monsterArray)
-        {
-            // Cycle through combat rooms if more monsters than rooms
-            var room = combatRooms[roomIndex % combatRooms.Count];
-            if (room is Room actualRoom)
-            {
-                actualRoom.MonstersInRoom.Add(monster);
-            }
-            roomIndex++;
-        }
-
-        _roomSeeder.LinkRooms(_context);
-
-        while (_playerManager.Player.Health > 0)
-        {
-            _gameLoopMenu.MainMenu();
+             _gameLoopMenu.MainMenu();
         }
         
     }
@@ -103,7 +63,8 @@ public class GameEngine
 
     private void SetupGame()
     {
-        // Load monsters into random rooms 
+        _roomSeeder.LinkRooms(_context);
+
         LoadMonsters();
 
         GameLoop();
@@ -111,9 +72,25 @@ public class GameEngine
 
     private void LoadMonsters()
     {
-        
+        //assign monsters based on their room ID
+        var rooms = _context.Rooms
+        .Include(r => r.MonstersInRoom)
+        .ToList();
+
+        var monsters = _context.Monsters.ToList();
+
+        foreach (var monster in monsters)
+        {
+            var room = rooms.FirstOrDefault(r => r.Id == monster.RoomId);
+
+            if (room != null)
+            {
+                room.MonstersInRoom.Add(monster);
+            }
+        }
+
     }
 
-    
+
 
 }

@@ -1,14 +1,15 @@
-﻿using ConsoleRpgEntities.Migrations;
+﻿
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Equipments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleRpgEntities.Models.Equipments
+namespace ConsoleRpgEntities.Models.Containers
 {
-    public class Inventory
+    public class Inventory : IItemContainer
     {
         public int Id { get; set; }
 
@@ -19,6 +20,7 @@ namespace ConsoleRpgEntities.Models.Equipments
         public virtual Player Player { get; set; }
         public virtual ICollection<Item> Items { get; set; }
 
+        
         public decimal InventoryWeight
         {
             get

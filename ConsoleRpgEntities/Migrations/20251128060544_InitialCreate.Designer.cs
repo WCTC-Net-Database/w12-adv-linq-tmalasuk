@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleRpgEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20251125193814_SeedData2")]
-    partial class SeedData2
+    [Migration("20251128060544_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -135,10 +135,6 @@ namespace ConsoleRpgEntities.Migrations
                     b.Property<int>("CurrentRoomId")
                         .HasColumnType("int");
 
-                    b.Property<string>("EquippedJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Experience")
                         .HasColumnType("int");
 
@@ -182,7 +178,56 @@ namespace ConsoleRpgEntities.Migrations
                     b.ToTable("Players");
                 });
 
-            modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Inventory", b =>
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.Equipped", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ChestId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FeetId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HandsId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HeadId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LegsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WeaponId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChestId");
+
+                    b.HasIndex("FeetId");
+
+                    b.HasIndex("HandsId");
+
+                    b.HasIndex("HeadId");
+
+                    b.HasIndex("LegsId");
+
+                    b.HasIndex("PlayerId")
+                        .IsUnique();
+
+                    b.HasIndex("WeaponId");
+
+                    b.ToTable("Equipped");
+                });
+
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.Inventory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -199,6 +244,25 @@ namespace ConsoleRpgEntities.Migrations
                         .IsUnique();
 
                     b.ToTable("Inventory");
+                });
+
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.RoomItems", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("RoomId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomId")
+                        .IsUnique();
+
+                    b.ToTable("RoomItems");
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Item", b =>
@@ -222,9 +286,6 @@ namespace ConsoleRpgEntities.Migrations
                         .HasColumnType("nvarchar(13)")
                         .HasColumnName("ItemCategory");
 
-                    b.Property<int?>("MonsterId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -232,6 +293,9 @@ namespace ConsoleRpgEntities.Migrations
                     b.Property<string>("Rarity")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("RoomItemsId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Value")
                         .HasColumnType("int");
@@ -243,7 +307,7 @@ namespace ConsoleRpgEntities.Migrations
 
                     b.HasIndex("InventoryId");
 
-                    b.HasIndex("MonsterId");
+                    b.HasIndex("RoomItemsId");
 
                     b.ToTable("Items");
 
@@ -389,6 +453,138 @@ namespace ConsoleRpgEntities.Migrations
                     b.HasBaseType("ConsoleRpgEntities.Models.Characters.Monsters.Monster");
 
                     b.HasDiscriminator().HasValue("Goblin");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 201,
+                            Difficulty = 1,
+                            Health = 100,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Grunt",
+                            RoomId = 1,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 202,
+                            Difficulty = 1,
+                            Health = 100,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Sneak",
+                            RoomId = 1,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 203,
+                            Difficulty = 2,
+                            Health = 200,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Cutthroat",
+                            RoomId = 2,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 204,
+                            Difficulty = 2,
+                            Health = 200,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Scout",
+                            RoomId = 2,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 205,
+                            Difficulty = 3,
+                            Health = 300,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Bruiser",
+                            RoomId = 3,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 206,
+                            Difficulty = 3,
+                            Health = 300,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Raider",
+                            RoomId = 3,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 207,
+                            Difficulty = 2,
+                            Health = 200,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Slinger",
+                            RoomId = 2,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 208,
+                            Difficulty = 4,
+                            Health = 400,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Firestarter",
+                            RoomId = 4,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 209,
+                            Difficulty = 4,
+                            Health = 400,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Shadowblade",
+                            RoomId = 4,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 210,
+                            Difficulty = 5,
+                            Health = 500,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Berserker",
+                            RoomId = 5,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 211,
+                            Difficulty = 5,
+                            Health = 500,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Bonecrusher",
+                            RoomId = 5,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 212,
+                            Difficulty = 3,
+                            Health = 300,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Poisonblade",
+                            RoomId = 3,
+                            StunStack = 0
+                        },
+                        new
+                        {
+                            Id = 213,
+                            Difficulty = 4,
+                            Health = 400,
+                            MonsterType = "Goblin",
+                            Name = "Goblin Stormcaller",
+                            RoomId = 4,
+                            StunStack = 0
+                        });
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Consumable", b =>
@@ -2769,26 +2965,84 @@ namespace ConsoleRpgEntities.Migrations
                     b.Navigation("CurrentRoom");
                 });
 
-            modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Inventory", b =>
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.Equipped", b =>
+                {
+                    b.HasOne("ConsoleRpgEntities.Models.Equipments.Equipment", "Chest")
+                        .WithMany()
+                        .HasForeignKey("ChestId");
+
+                    b.HasOne("ConsoleRpgEntities.Models.Equipments.Equipment", "Feet")
+                        .WithMany()
+                        .HasForeignKey("FeetId");
+
+                    b.HasOne("ConsoleRpgEntities.Models.Equipments.Equipment", "Hands")
+                        .WithMany()
+                        .HasForeignKey("HandsId");
+
+                    b.HasOne("ConsoleRpgEntities.Models.Equipments.Equipment", "Head")
+                        .WithMany()
+                        .HasForeignKey("HeadId");
+
+                    b.HasOne("ConsoleRpgEntities.Models.Equipments.Equipment", "Legs")
+                        .WithMany()
+                        .HasForeignKey("LegsId");
+
+                    b.HasOne("ConsoleRpgEntities.Models.Characters.Player", "Player")
+                        .WithOne("Equipped")
+                        .HasForeignKey("ConsoleRpgEntities.Models.Containers.Equipped", "PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ConsoleRpgEntities.Models.Equipments.Equipment", "Weapon")
+                        .WithMany()
+                        .HasForeignKey("WeaponId");
+
+                    b.Navigation("Chest");
+
+                    b.Navigation("Feet");
+
+                    b.Navigation("Hands");
+
+                    b.Navigation("Head");
+
+                    b.Navigation("Legs");
+
+                    b.Navigation("Player");
+
+                    b.Navigation("Weapon");
+                });
+
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.Inventory", b =>
                 {
                     b.HasOne("ConsoleRpgEntities.Models.Characters.Player", "Player")
                         .WithOne("Inventory")
-                        .HasForeignKey("ConsoleRpgEntities.Models.Equipments.Inventory", "PlayerId")
+                        .HasForeignKey("ConsoleRpgEntities.Models.Containers.Inventory", "PlayerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Player");
                 });
 
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.RoomItems", b =>
+                {
+                    b.HasOne("ConsoleRpgEntities.Models.Rooms.Room", "Room")
+                        .WithOne("DroppedLoot")
+                        .HasForeignKey("ConsoleRpgEntities.Models.Containers.RoomItems", "RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Room");
+                });
+
             modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Item", b =>
                 {
-                    b.HasOne("ConsoleRpgEntities.Models.Equipments.Inventory", null)
+                    b.HasOne("ConsoleRpgEntities.Models.Containers.Inventory", null)
                         .WithMany("Items")
                         .HasForeignKey("InventoryId");
 
-                    b.HasOne("ConsoleRpgEntities.Models.Characters.Monsters.Monster", null)
-                        .WithMany("itemDrop")
-                        .HasForeignKey("MonsterId");
+                    b.HasOne("ConsoleRpgEntities.Models.Containers.RoomItems", null)
+                        .WithMany("Items")
+                        .HasForeignKey("RoomItemsId");
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Items.Spellbook", b =>
@@ -2802,24 +3056,30 @@ namespace ConsoleRpgEntities.Migrations
                     b.Navigation("GrantedAbility");
                 });
 
-            modelBuilder.Entity("ConsoleRpgEntities.Models.Characters.Monsters.Monster", b =>
-                {
-                    b.Navigation("itemDrop");
-                });
-
             modelBuilder.Entity("ConsoleRpgEntities.Models.Characters.Player", b =>
                 {
+                    b.Navigation("Equipped")
+                        .IsRequired();
+
                     b.Navigation("Inventory")
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Inventory", b =>
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.Inventory", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ConsoleRpgEntities.Models.Containers.RoomItems", b =>
                 {
                     b.Navigation("Items");
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Rooms.Room", b =>
                 {
+                    b.Navigation("DroppedLoot")
+                        .IsRequired();
+
                     b.Navigation("MonstersInRoom");
 
                     b.Navigation("PlayersInRoom");

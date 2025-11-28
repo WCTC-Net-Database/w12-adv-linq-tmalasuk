@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using static ConsoleRpgEntities.Models.Equipments.Enums;
+using static ConsoleRpgEntities.Models.Enums;
 
 namespace ConsoleRpgEntities.Models.Equipments;
 

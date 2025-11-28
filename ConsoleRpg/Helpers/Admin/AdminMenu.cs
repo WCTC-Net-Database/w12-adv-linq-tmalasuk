@@ -1,5 +1,6 @@
 ﻿using ConsoleRpg.Helpers.EntityHelper;
 using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Models;
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Rooms;
@@ -32,11 +33,11 @@ namespace ConsoleRpg.Helpers.Admin
             _playerMenu = playerMenu;
         }
 
-        public void ShowAdminMenu()
+        public void ShowAdminMenu(int menuBelow)
         {
             const string adminPassword = "admin123"; // Simple hard-coded password
-            _outputManager.Clear();
-            _outputManager.Write("Enter admin password: ", ConsoleColor.Green);
+            _outputManager.ClearBelow(menuBelow);
+            _outputManager.Write(" Enter admin password: ", ConsoleColor.Green);
             _outputManager.Display();
 
             string input = Console.ReadLine();
@@ -61,17 +62,25 @@ namespace ConsoleRpg.Helpers.Admin
             while (!exit)
             {  
                 _outputManager.Clear();
-                _outputManager.WriteLine(
-                        "Selected Player: " + ((SelectedPlayer != null) ? SelectedPlayer.Name : "None"),
-                        ConsoleColor.Yellow
-                    );
-                _outputManager.WriteLine("=== Admin Menu ===", ConsoleColor.Cyan);
-                _outputManager.WriteLine("1. View System Logs");
-                _outputManager.WriteLine("2. Manage Users");
-                _outputManager.WriteLine("3. Manage Abilities");
-                _outputManager.WriteLine("4. Manage Rooms");
-                _outputManager.WriteLine("5. Exit Admin Menu");
-                _outputManager.Write("Select an option: ");
+                
+                var heroDetails = _playerManager.DisplayDetails();
+                string[] boxedHero = _outputManager.BoxPanel(heroDetails);
+                string[] menuOptions = {"View System Logs", "Manage Users","Manage Abilities","Manage Rooms","Exit Admin Menu"};
+                string[] boxedMenu = _outputManager.CraftMenu(menuOptions, boxedHero.Count(), "ADMIN", 35);
+                int totalWidth = boxedMenu[0].Length + boxedHero[0].Length;
+                if (AsciiArt.Art.TryGetValue("Title", out var title))
+                {
+                    foreach (var line in title)
+                    {
+                        int lineWidth = line.Length;
+                        int centerOffset = (totalWidth / 4) - 6;
+                        centerOffset = Math.Max(centerOffset, 0); // don't go negative
+                        _outputManager.WriteLine(new string(' ', centerOffset) + line);
+                    }
+                    _outputManager.WriteLine("");
+                }
+                _outputManager.PrintSideBySide(boxedHero, boxedMenu, 0);
+                _outputManager.Write(" >> ");    
                 _outputManager.Display();
                 string choice = Console.ReadLine();
 

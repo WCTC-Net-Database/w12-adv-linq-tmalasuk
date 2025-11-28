@@ -1,5 +1,6 @@
 ﻿using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Attributes;
+using ConsoleRpgEntities.Models.Containers;
 using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -12,7 +13,7 @@ using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using static ConsoleRpgEntities.Models.Equipments.Enums;
+using static ConsoleRpgEntities.Models.Enums;
 
 
 namespace ConsoleRpgEntities.Models.Characters
@@ -82,6 +83,8 @@ namespace ConsoleRpgEntities.Models.Characters
         
         public int DodgeChance => Agility * 2;
 
+        public List<Room> ExploredRooms = new List<Room>();
+
         // Foreign key
         public int? InventoryId { get; set; } // Foreign key for Inventory
         
@@ -91,26 +94,16 @@ namespace ConsoleRpgEntities.Models.Characters
         public virtual ICollection<Ability> Abilities { get; set; }
 
         [NotMapped]
-        public virtual Dictionary<EquipmentSlot, Equipment> Equipped { get; set; }
+        public virtual Equipped Equipped { get; set; }
 
         public virtual Room CurrentRoom { get; set; }
 
-        public string EquippedJson
-        {
-            get => JsonSerializer.Serialize(Equipped, new JsonSerializerOptions { ReferenceHandler = ReferenceHandler.IgnoreCycles });
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    Equipped = new Dictionary<EquipmentSlot, Equipment>();
-                else
-                    Equipped = JsonSerializer.Deserialize<Dictionary<EquipmentSlot, Equipment>>(value) ?? new Dictionary<EquipmentSlot, Equipment>();
-            }
-        }
+     
 
         public Player()
         {
             Inventory = new Inventory();
-            Equipped = new Dictionary<EquipmentSlot, Equipment>();
+            Equipped = new Equipped();
             Abilities = new List<Ability>();
         }
         public Player(string name, PlayerClass playerClass)
@@ -118,10 +111,11 @@ namespace ConsoleRpgEntities.Models.Characters
             Name = name;
             classType = playerClass;
             Abilities = new List<Ability>();
-            Equipped = new Dictionary<EquipmentSlot, Equipment>();
+            Equipped = new Equipped { Player = this, PlayerId = this.Id};
             Inventory = new Inventory { Player = this, PlayerId = this.Id, Items = new List<Item>() };
             Experience = 0;
             SkillPoints = 0;
+            _level = 1;
             Level = 1;
             switch (playerClass)
             {
@@ -181,45 +175,53 @@ namespace ConsoleRpgEntities.Models.Characters
 
 
 
-        public void Attack(ITargetable target)
-        {
-            if (!Equipped.TryGetValue(EquipmentSlot.Weapon, out var weapon))
-            {
-                Console.WriteLine($"{Name} has no weapon equipped! They weakly punch at {target.Name}");
-                return;
-            }
 
-            Console.WriteLine($"{Name} attacks {target.Name} with {weapon.Name}, dealing {weapon.Value} damage!");
-            target.Health -= weapon.Value;
-            Console.WriteLine($"{target.Name} has {target.Health} health remaining.");
-        }
-
-
-        
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
+            var currentInvWeight = Inventory.InventoryWeight;
+            var currentEquipWeight = Equipped.EquipmentWeight;
 
-            sb.AppendLine("+-------------------+----------------------+");
-            sb.AppendLine("| Property          | Value                |");
-            sb.AppendLine("+-------------------+----------------------+");
-            sb.AppendLine($"| Name              | {Name,-20} |");
-            sb.AppendLine($"| Class             | {classType,-20} |");
-            sb.AppendLine($"| Level             | {Level,-20} |");
-            sb.AppendLine($"| Experience        | {Experience,-20} |");
-            sb.AppendLine($"| Health            | {Health}/{MaxHealth,-16}  |");
-            sb.AppendLine($"| Mana              | {Mana}/{MaxMana,-16}  |");
-            sb.AppendLine($"| Strength          | {Strength,-20} |");
-            sb.AppendLine($"| Agility           | {Agility,-20} |");
-            sb.AppendLine($"| Intelligence      | {Intelligence,-20} |");
-            sb.AppendLine($"| Dodge Chance      | {DodgeChance,-20} |");
-            sb.AppendLine($"| Inventory Limit   | {InventoryCarryLimit,-20} |");
-            sb.AppendLine($"| Equipment Limit   | {EquipmentCarryLimit,-20} |");
-            sb.AppendLine("+-------------------+----------------------+");
+            // Decorative name line
+            string rawName = Name;
+            string embellished = $"+-- {rawName} --+";
 
-            return sb.ToString();
+            // Width of everything below (set this once)
+            int innerWidth = 26; // or whatever width you want the underline to be
+
+            // Center the embellished name within that width
+            string centeredName = embellished
+                .PadLeft((innerWidth + embellished.Length) / 2)
+                .PadRight(innerWidth);
+
+            return
+        $@"{centeredName}
+{new string('-', innerWidth)}
+Class:         {classType}
+Level:         {Level}
+Experience:    {Experience}
+Skill Points:  {SkillPoints}
+
+Health:        {Health}/{MaxHealth}
+Mana:          {Mana}/{MaxMana}
+
+ STR: {Strength} AGI: {Agility} INT:{Intelligence}
+
+Dodge Chance:  {DodgeChance}%
+Inv Weight:    {currentInvWeight} / {InventoryCarryLimit}
+Equip Weight:  {currentEquipWeight} / {EquipmentCarryLimit}
+
+Current Room:  {(CurrentRoom != null ? CurrentRoom.Name : "None")}
+";
         }
+
+
+
+        private string PadLabel(string label)
+        {
+            return label.PadRight(12); // tweak spacing here
+        }
+
 
     }
 }

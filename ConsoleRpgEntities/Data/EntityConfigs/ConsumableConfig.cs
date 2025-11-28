@@ -1,4 +1,5 @@
-﻿using ConsoleRpgEntities.Models.Equipments;
+﻿using ConsoleRpgEntities.Models;
+using ConsoleRpgEntities.Models.Equipments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;

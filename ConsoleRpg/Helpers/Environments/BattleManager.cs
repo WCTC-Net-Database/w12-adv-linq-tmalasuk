@@ -1,14 +1,18 @@
 ﻿using ConsoleRpg.Helpers.EntityHelper;
+using ConsoleRpg.Helpers.Menus;
+using ConsoleRpgEntities.Models;
 using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Attributes;
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
 using ConsoleRpgEntities.Models.Equipments;
+using ConsoleRpgEntities.Models.Rooms;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Schema;
 
@@ -48,7 +52,7 @@ namespace ConsoleRpg.Helpers.Environments
             _battleMenu = battleMenu;
         }
 
-        public void BattleLoop()
+        public void BattleLoop(GameLoopMenu menu)
         {
             // upkeep
             setUpEntities();
@@ -60,7 +64,9 @@ namespace ConsoleRpg.Helpers.Environments
                 ClearBuffs();
                                 
                 _playerManager.Player.Mana += 2;
-                _battleMenu.RenderBattleHUD(_playerManager.Player, _monsterManager.Monster);
+                _battleMenu.RenderBattleHUD(_playerManager.Player, _monsterManager.Monster, _outputManager);
+                int underMenu = Console.GetCursorPosition().Top;
+
                 var embrace = activeAbilityBuffs.FirstOrDefault(b => b.Id == 2) as NatureEmbrace;
                 if (embrace != null)
                 {
@@ -99,7 +105,7 @@ namespace ConsoleRpg.Helpers.Environments
                                 break;
 
                             case "2":
-                                var ability = SelectAbilities();
+                                var ability = SelectAbilities(underMenu);
 
                                 if (ability == null)
                                 {
@@ -120,7 +126,7 @@ namespace ConsoleRpg.Helpers.Environments
 
                             default:
                                 _battleMenu.AddCombatLog("Invalid selection", 0);
-                                _battleMenu.RenderBattleHUD(_playerManager.Player, _monsterManager.Monster);
+                                _battleMenu.RenderBattleHUD(_playerManager.Player, _monsterManager.Monster, _outputManager);
                                 break;
                         }
                     }
@@ -201,7 +207,7 @@ namespace ConsoleRpg.Helpers.Environments
             if (attacker is Player player)
             {
                 var consumableBuffs = activeConsumableBuffs.Where(buff => buff.ConsumableType == Enums.ConsumableType.Attack).Sum(buff => buff.Value);
-                var weaponAttackBuff = _playerManager.Player.Equipped.Where(kvp => kvp.Value.EquipmentType == Enums.EquipmentType.Attack).Sum(kvp => kvp.Value.Value);
+                var weaponAttackBuff = _playerManager.Player.Equipped.Items.Cast<Equipment>().Where(e => e.EquipmentType == Enums.EquipmentType.Attack).Sum(buff => buff.Value);
                 int damage = (player.Strength * 3) + weaponAttackBuff + consumableBuffs;
                 int damageVariance = _random.Next(-2, 3); // Random variance between -2 and +2
                 return damage + damageVariance;
@@ -285,57 +291,12 @@ namespace ConsoleRpg.Helpers.Environments
             }
         }
 
-        public Ability SelectAbilities()
+        private Ability SelectAbilities(int underMenu)
         {
-            Console.Clear();
-            var abilities = _playerManager.Player.Abilities.ToList();
-
-            // Check if the player has any abilities;
-
-            // Check if the player has any abilities
-            if (abilities == null || !abilities.Any())
+            if (!_playerManager.DisplayAbilities(_outputManager, underMenu))
             {
-                _outputManager.WriteLine("You have no abilities to display!", ConsoleColor.Red);
-                _outputManager.Display();
-                Thread.Sleep(1500);
                 return null;
             }
-
-            _outputManager.Clear();
-            _outputManager.WriteLine("--- Player Abilities ---", ConsoleColor.Cyan);
-
-            // 2. Define the Column Headers and Spacing
-            // We'll use fixed spacing for neat alignment.
-            // Columns: [ID] [NAME] [DESCRIPTION] [TYPE] [MANA COST]
-            string headerFormat = "{0,-3} | {1,-20} | {2,-65} | {3,-10} | {4,-10}";
-
-            // Display the Header Row
-            _outputManager.WriteLine(
-                string.Format(headerFormat, "ID", "Name", "Description", "Type", "Mana Cost"),
-                ConsoleColor.Yellow);
-
-            // Draw a Separator Line
-            _outputManager.WriteLine(new string('-', 120), ConsoleColor.DarkGray);
-
-            // 3. Loop Through and Display Abilities
-            int counter = 1;
-            foreach (var ability in abilities)
-            {
-                // Use a different color for the actual data
-                _outputManager.WriteLine(
-                    string.Format(
-                        headerFormat,
-                        ability.Id, // Display 1-based index instead of the raw ID for the menu
-                        ability.Name,
-                        // Truncate the description if it's too long for the column
-                        (ability.Description.Length > 62 ? ability.Description.Substring(0, 62) + "..." : ability.Description),
-                        ability.AbilityType,
-                        ability.ManaCost
-                    ));
-            }
-
-            _outputManager.Display();
-
             Ability chosenAbility = null;
 
             while (true)
@@ -346,7 +307,7 @@ namespace ConsoleRpg.Helpers.Environments
                 if (choice == "0")
                     return null;
 
-                chosenAbility = abilities.FirstOrDefault(a => a.Id.ToString() == choice);
+                chosenAbility = _playerManager.Player.Abilities.FirstOrDefault(a => a.Id.ToString() == choice);
 
                 if (chosenAbility == null)
                 {
@@ -370,23 +331,13 @@ namespace ConsoleRpg.Helpers.Environments
         }
 
         // Battle Engine handles the battle logic
-        public List<string> HandleMonsterDefeat(Player player, Monster monster, InventoryManager inventory)
+        public List<string> HandleMonsterDefeat(Player player, Monster monster, InventoryManager inventory, Room room)
         {
             var endEvents = new List<string>();
 
             if (monster.Health <= 0)
             {
                 endEvents.Add($"{monster.Name} has been defeated");
-
-                var item = monster.itemDrop.FirstOrDefault();
-                if (item != null)
-                {
-                    bool addedToInventory = inventory.AddItemToInventory(item);
-                    if (addedToInventory)
-                        endEvents.Add($"{item.Name} has been added to your inventory!");
-                    else
-                        endEvents.Add("There isn't enough room in your inventory to add anymore items...battle loot lost.");
-                }
 
                 player.Experience += monster.experienceGiven;
                 endEvents.Add($"{player.Name} gained {monster.experienceGiven} experience!");
@@ -395,19 +346,32 @@ namespace ConsoleRpg.Helpers.Environments
                 {
                     endEvents.Add($"{player.Name} leveled up to level {player.Level}!");
                 }
+
+                // ---- LOOT DROP HERE ----
+                var lootManager = new LootManager();
+                var lootResults = lootManager.GenerateLoot(player, monster, inventory, room);
+                endEvents.AddRange(lootResults);
+
+                if (lootResults.Count == 0)
+                    endEvents.Add("No loot dropped.");
             }
 
             return endEvents;
         }
 
 
+
+
+
         public void setUpEntities()
         {
             _actor = _playerManager.Player;
             _notActor = _monsterManager.Monster;
+            _monsterManager.Monster.Health = _monsterManager.Monster.MaxHealth;
+
         }
 
-        
+
 
     }
 }

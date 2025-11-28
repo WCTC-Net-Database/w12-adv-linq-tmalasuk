@@ -28,78 +28,36 @@ namespace ConsoleRpg.Helpers.Menus
         
         public bool ShowMainMenu()
         {
-            Console.Clear();
+            _outputManager.Clear();
 
-            // Draw title from dictionary
+            var heroDetails = _playerManager.DisplayDetails();
+            string[] boxedHero = _outputManager.BoxPanel(heroDetails);
+            string[] menuOptions = { "Start Adventure", "New Hero", "Load Hero", "Admin", "Quit" };
+            string[] boxedMenu = _outputManager.CraftMenu(menuOptions, boxedHero.Count(), "MENU", 35);
+            int totalWidth = boxedMenu[0].Length + boxedHero[0].Length;         
             if (AsciiArt.Art.TryGetValue("Title", out var title))
             {
                 foreach (var line in title)
-                    Console.WriteLine(line);
+                {
+                    int lineWidth = line.Length;
+                    int centerOffset = (totalWidth / 4) - 6;
+                    centerOffset = Math.Max(centerOffset, 0); 
+                    _outputManager.WriteLine(new string(' ', centerOffset) + line);
+                }
+                _outputManager.WriteLine("");
             }
-
-            Console.WriteLine();
-
-            // Get hero details (already padded)
-            var heroDetails = _playerManager.DisplayDetails();
-
-            // Box the hero details
-            string[] boxedHero = BoxPanel(heroDetails);
-
-            // Right-side menu
-            string[] menuPanel = new string[]
-            {
-        "==================== MENU ====================",
-        "                                             |",
-        "  [1] Start Adventure                        |",
-        "  [2] New Hero                               |",
-        "  [3] Load Hero                              |",
-        "  [4] Admin                                  |",
-        "  [5] Quit                                   |",
-        "                                             |",
-        "=============================================="
-            };
-
-            // Determine number of rows to print
-            int rows = Math.Max(boxedHero.Length, menuPanel.Length);
-
-            int heroOffset = 5; // spaces from left edge
-            int menuOffset = heroOffset + boxedHero.Max(line => line.Length) + 3; // 3 spaces between panels
-
-            for (int i = 0; i < rows; i++)
-            {
-                string left = i < boxedHero.Length ? new string(' ', heroOffset) + boxedHero[i] : "".PadLeft(heroOffset + boxedHero.Max(l => l.Length));
-                string right = i < menuPanel.Length ? menuPanel[i].PadRight(boxedHero.Max(l => l.Length)) : "";
-                Console.WriteLine(left + right);
-            }
+            var mainMenuLastLine = _outputManager.PrintSideBySide(boxedHero, boxedMenu, 0);
+            
+            int underMenu = Console.GetCursorPosition().Top;
 
 
-            return HandleMainMenuInput();
-        }
-
-        // Helper method to box a panel of strings
-        private string[] BoxPanel(string[] lines)
-        {
-            int maxWidth = lines.Max(line => line.Length);
-            string border = "=" + new string('=', maxWidth + 2) + "=";
-
-            string[] boxed = new string[lines.Length + 2];
-            boxed[0] = border;
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                boxed[i + 1] = "| " + lines[i].PadRight(maxWidth) + " |";
-            }
-
-            boxed[boxed.Length - 1] = border;
-
-            return boxed;
+            return HandleMainMenuInput(underMenu, mainMenuLastLine);
         }
 
 
-        private bool HandleMainMenuInput()
+        private bool HandleMainMenuInput(int underMenu, int mainMenuLastLine)
         {
-            _outputManager.Write(">> ", ConsoleColor.White);
-            _outputManager.Display();
+            _outputManager.ClearBelow(underMenu);
 
             var input = Console.ReadLine();
 
@@ -108,160 +66,237 @@ namespace ConsoleRpg.Helpers.Menus
                 case "1":
                     if (_playerManager.Player != null)
                     {
-                        _outputManager.WriteLine("Starting game...", ConsoleColor.Green);
+                        _outputManager.ClearBelow(underMenu);
+                        _outputManager.WriteLine(" Starting game...", ConsoleColor.Green);
                         _outputManager.Display();
-                        return true; // ← EXIT MENU AND START GAME
+                        return true; 
                     }
                     else
                     {
-                        _outputManager.WriteLine("Please select a hero first.", ConsoleColor.Red);
-                        _outputManager.Display();
-                        Thread.Sleep(1000);
+                        _outputManager.DisplayErrorBelow(" Please select hero first.", underMenu);
                         return false;
                     }
                 case "2":
-                    CreateHeroMenu();
+                    CreateHeroMenu(underMenu, mainMenuLastLine);
                     return false;
                 case "3":
-                    LoadHeroMenu();
+                    LoadHeroMenu(underMenu);
                     return false;
                 case "4":
-                    _adminMenu.ShowAdminMenu();
+                    _adminMenu.ShowAdminMenu(underMenu);
                     return false;
                 case "5":
-                    _outputManager.WriteLine("Exiting...", ConsoleColor.Red);
+                    _outputManager.ClearBelow(underMenu);
+                    _outputManager.WriteLine(" Exiting...", ConsoleColor.Red);
                     _outputManager.Display();
                     Environment.Exit(0);
                     return true;
 
                 default:
-                    _outputManager.WriteLine("Invalid choice.", ConsoleColor.Red);
-                    _outputManager.Display();
+                    _outputManager.DisplayErrorBelow(" Invalid Choice.", underMenu);
                     return false;
             }
         }
 
 
-        public void CreateHeroMenu()
+        public void CreateHeroMenu(int underMenu, int mainMenuLastLine)
         {
-            bool namevalid = false;
+            _outputManager.ClearBelow(underMenu);
             var name = "";
             var playerClass = "";
-            while (!namevalid)
+            while (true)
             {
-                _outputManager.Clear();
-                _outputManager.Write("Enter Hero's Name: ", ConsoleColor.White);
+                _outputManager.ClearBelow(underMenu);
+                _outputManager.Write(" Enter Hero's Name: ", ConsoleColor.White);
                 _outputManager.Display();
-                name = Console.ReadLine();
-                var currentPlayers = _playerManager.GetPlayers();
-                List<string> currentPlayerNames = new List<string>();
-                foreach (Player player in currentPlayers)
+                name = Console.ReadLine();           
+                if (string.IsNullOrWhiteSpace(name) || _playerManager.GetPlayers().FirstOrDefault(p => p.Name.ToLower() == name) != null)
                 {
-                    currentPlayerNames.Add(player.Name);
-                }
+                    _outputManager.DisplayErrorBelow(" Name taken or not valid. Please try again.", underMenu);
 
-                if (string.IsNullOrWhiteSpace(name) || currentPlayerNames.Contains(name))
-                {
-                    _outputManager.Clear();
-                    _outputManager.WriteLine("Name taken or not valid. Please try again.", ConsoleColor.Red);
-                    _outputManager.Display();
-                    Thread.Sleep(1500);
                     continue;
                 }
                 else
                 {
-                    namevalid = true;
+                    break;
                 }
             }
-            _outputManager.Clear();
-            bool classvalid = false;
-
-            while (!classvalid)
+            
+            while (true)
             {
-                _outputManager.WriteLine($"Is {name} a [1] Knight [2] Mage [3] Archer", ConsoleColor.White);
-                _outputManager.Write(">> ");
+                _outputManager.ClearBelow(underMenu);
+                ChooseClassMenu(underMenu, mainMenuLastLine);
+                
                 _outputManager.Display();
+                underMenu = Console.GetCursorPosition().Top;
+                _outputManager.WriteandDisplay(" Choose your class >> ");              
                 playerClass = Console.ReadLine();
                 switch (playerClass)
                 {
                     case "1":
                         playerClass = "Knight";
-                        classvalid = true;
                         break;
                     case "2":
                         playerClass = "Mage";
-                        classvalid = true;
                         break;
                     case "3":
                         playerClass = "Archer";
-                        classvalid = true;
                         break;
                     default:
-                        _outputManager.Clear();
-                        _outputManager.WriteLine("That wasn't a valid response. Please try again.", ConsoleColor.Red);
-                        _outputManager.Display();
-                        break;
+                        _outputManager.DisplayErrorBelow("Invalid input", underMenu);
+                        continue;
                 }
+                break;
             }
 
-            _outputManager.Clear();
-            _outputManager.WriteLine("Creating your hero...", ConsoleColor.Green);
+            _outputManager.ClearBelow(underMenu);
+            _outputManager.WriteLine(" Creating your hero...", ConsoleColor.Green);
             _outputManager.Display();
-            Thread.Sleep(1000);
-            _outputManager.Clear();
+            Thread.Sleep(1500);
             _playerManager.CreatePlayer(name, playerClass);
         }
 
-        public void LoadHeroMenu()
+        public void ChooseClassMenu(int underMenu, int mainMenuLastLine)
         {
-            _outputManager.Clear();
+            int totalWidth = mainMenuLastLine - 2;
+
+            int leftPad = 1;
+            string pad = new string(' ', leftPad);
+
+            int classColWidth = 11; // Shrink class column
+            int paddingForBorders = 6; // "| " + " | " + " |" = 6 total border chars
+
+            // Calculate description width
+            int descColWidth = totalWidth - paddingForBorders - classColWidth;
+            if (descColWidth < 15)
+                descColWidth = 15;
+
+            // Build a row without wrapping, just honoring \n
+            string BuildRow(string c, string d)
+            {
+                // Split the description by newline
+                var lines = d.Split('\n');
+
+                List<string> rows = new List<string>();
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (i == 0)
+                    {
+                        // First line shows the class label
+                        rows.Add(
+                            pad + "| " +
+                            c.PadRight(classColWidth) +
+                            " | " +
+                            lines[i].PadRight(descColWidth) +
+                            " |"
+                        );
+                    }
+                    else
+                    {
+                        // Additional lines: class column is empty
+                        rows.Add(
+                            pad + "| " +
+                            new string(' ', classColWidth) +
+                            " | " +
+                            lines[i].PadRight(descColWidth) +
+                            " |"
+                        );
+                    }
+                }
+
+                return string.Join("\n", rows);
+            }
+
+            // Separator line — must match visible width
+            string separator = pad + "+" + new string('-', totalWidth - 1) + "+";
+
+            _outputManager.WriteLine(
+                BuildRow("[1] Knight", "STRENGTH - \nhigh carrying capacity and raw attack damage."),
+                ConsoleColor.White
+            );
+            _outputManager.WriteLine(separator, ConsoleColor.White);
+
+            _outputManager.WriteLine(
+                BuildRow("[2] Mage", "INTELLIGENCE - \nhigh mana pool, excels at casting spells."),
+                ConsoleColor.White
+            );
+            _outputManager.WriteLine(separator, ConsoleColor.White);
+
+            _outputManager.WriteLine(
+                BuildRow("[3] Archer", "AGILITY - \nincreased dodge chance and crafty explorers."),
+                ConsoleColor.White
+            );
+
+            _outputManager.WriteLine(separator, ConsoleColor.Gray);
+        }
+
+
+
+        public void LoadHeroMenu(int underMenu)
+        {
+            
             if (_playerManager.GetPlayers().Count == 0)
             {
-                _outputManager.WriteLine("No heros to load. Create a new hero.", ConsoleColor.Red);
-                _outputManager.Display();
-                Thread.Sleep(1000);
+                _outputManager.DisplayErrorBelow(" No heros to load. Create a new hero.", underMenu);
             }
             else
             {
-                _outputManager.WriteLine(_playerManager.PlayersTable(_playerManager.GetPlayers()));
-                Console.WriteLine();
-                _outputManager.Write("Select name you'd like to interact with >> ");
-                _outputManager.Display();
-                var desiredName = Console.ReadLine();
-                _outputManager.Clear();
-                _playerManager.selectPlayer(desiredName);
-                if (_playerManager.Player == null)
+               
+                while (true)
                 {
-                    _outputManager.WriteLine("That was not a valid entry. Please try again.", ConsoleColor.Red);
-                    _outputManager.Display();
-                    Thread.Sleep(1000);
-                    LoadHeroMenu();
-                }
-                bool successfulSelection = false;
-                _outputManager.WriteLine(_playerManager.Player.ToString());
-                _outputManager.WriteLine("Would you like to [1] Select Hero for Adventure or [2] Delete Hero");
-                while (!successfulSelection)
-                {
-                    _outputManager.Write(">> ");
-                    _outputManager.Display();
-                    var menuChoice = Console.ReadLine();
-                    switch (menuChoice)
+                    _outputManager.Clear();
+                    var playerLines = _playerManager.PlayersTable(_playerManager.GetPlayers())
+                                    .Split(Environment.NewLine);
+                    var boxedPlayers = _outputManager.BoxPanel(playerLines);
+                    foreach (string line in boxedPlayers)
                     {
-                        case "1":
-                            successfulSelection = true;
-
-                            break;
-                        case "2":
-                            successfulSelection = true;
-                            _playerManager.DeletePlayer(desiredName);
-                            _playerManager.Player = null;
-                            break;
-                        default:
-                            _outputManager.WriteLine("Not a valid request. Please try again", ConsoleColor.Red);
-                            _outputManager.Display();
-                            Thread.Sleep(1000);
-                            break;
+                        _outputManager.WriteLine($" {line}");
                     }
+                    _outputManager.Display();
+                    underMenu = Console.GetCursorPosition().Top;
+                    _outputManager.WriteandDisplay(" Enter Name: ");
+                    var name = Console.ReadLine();
+                    if (HeroSheet(name)) break;
+                    else
+                    {
+                        _outputManager.DisplayErrorBelow(" No hero with that name exists", underMenu);
+                        continue;
+                    }
+                    
+                }
+            }
+        }
+
+        private bool HeroSheet(string name)
+        {        
+            _playerManager.selectPlayer(name);
+            if (_playerManager.Player == null)
+            {
+                return false;
+            }
+            _outputManager.Clear();
+            var heroDetails = _playerManager.Player.ToString().TrimEnd().Split(Environment.NewLine);
+            string[] boxedHero = _outputManager.BoxPanel(heroDetails);
+            string[] menuOptions = { "", "[1] Select", "[2] Delete" };
+            _outputManager.PrintSideBySide(boxedHero, menuOptions, 2);
+            
+            int underMenu = Console.GetCursorPosition().Top;
+            while (true)
+            {
+                var choice = Console.ReadLine();
+                switch (choice)
+                {
+                    case "1":
+                        return true;
+                    case "2":
+                        _playerManager.DeletePlayer(name);
+                        _playerManager.Player = null;
+                        return true;
+                    default:
+                        _outputManager.DisplayErrorBelow(" Invalid selection.", underMenu);
+                        _outputManager.ClearBelow(underMenu);
+                        continue;
                 }
             }
         }

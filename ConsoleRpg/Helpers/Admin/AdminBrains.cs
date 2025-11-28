@@ -3,6 +3,7 @@ using ConsoleRpg.Helpers.Menus;
 using ConsoleRpgEntities.Data;
 using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Containers;
 using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static ConsoleRpgEntities.Models.Equipments.Enums;
+using static ConsoleRpgEntities.Models.Enums;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ConsoleRpg.Helpers.Admin
@@ -293,7 +294,7 @@ namespace ConsoleRpg.Helpers.Admin
             {
                 Items = new List<Item>()
             };
-            newPlayer.Equipped = new Dictionary<EquipmentSlot, Equipment>();
+            newPlayer.Equipped = new Equipped();
 
             // ---------- Save to Database ----------
             newPlayer.CurrentRoom = _context.Rooms.First(r => r.Id == 1);

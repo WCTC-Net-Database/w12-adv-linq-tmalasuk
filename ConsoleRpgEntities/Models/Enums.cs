@@ -1,4 +1,4 @@
-﻿namespace ConsoleRpgEntities.Models.Equipments;
+﻿namespace ConsoleRpgEntities.Models;
 
 public class Enums
 {

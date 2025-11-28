@@ -1,5 +1,9 @@
-﻿using ConsoleRpg.Helpers.Environments;
+﻿using ConsoleRpg.Helpers.Battle;
+using ConsoleRpg.Helpers.Environments;
+using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Models;
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Containers;
 using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Items;
 using System;
@@ -7,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static ConsoleRpgEntities.Models.Enums;
 
 namespace ConsoleRpg.Helpers.EntityHelper
 {
@@ -15,11 +20,16 @@ namespace ConsoleRpg.Helpers.EntityHelper
        
         private readonly PlayerManager _playerManager;
         private readonly BattleManager _battleManager;
+        private readonly GameContext _context;
+        private readonly Random _rng = new Random();
+        private readonly RoomManager _roomManager;
 
-        public InventoryManager(PlayerManager playerManager, BattleManager battleManager)
+        public InventoryManager(PlayerManager playerManager, BattleManager battleManager, GameContext context, RoomManager roomManager)
         {
+            _context = context;
             _playerManager = playerManager;
             _battleManager = battleManager;
+            _roomManager = roomManager;
             
         }
         public List<Item> ViewInventory()
@@ -29,12 +39,12 @@ namespace ConsoleRpg.Helpers.EntityHelper
 
         public List<Item> ViewEquippedItems()
         {
-            return _playerManager.Player.Equipped.Values.Cast<Item>().ToList();
+            return _playerManager.Player.Equipped.Items.ToList();
         }
 
         public List<Item> ViewEquippableItems()
         {
-            var currentWeight = _playerManager.Player.Equipped.Where(kv => kv.Value != null).Sum(kvp => kvp.Value.Weight);
+            var currentWeight = _playerManager.Player.Equipped.EquipmentWeight;
 
             var freeweight = _playerManager.Player.EquipmentCarryLimit - currentWeight;
             var equippableItems = _playerManager.Player.Inventory.Items.Where(i => i.Weight < freeweight && i is Equipment).ToList();
@@ -42,21 +52,21 @@ namespace ConsoleRpg.Helpers.EntityHelper
         }
 
 
-        public Item ItemSelector(string request)
+        public Item ItemSelector(string request, IItemContainer container)
         {
-            var selectedItem = _playerManager.Player.Inventory.Items
-                                        .FirstOrDefault(i => i.Name.Equals(request, StringComparison.OrdinalIgnoreCase));
-            if (selectedItem == null)
+            Item selectedItem = null;
+            switch (container)
             {
-                selectedItem = _playerManager.Player.Equipped.Values
-                                        .FirstOrDefault(i => i != null && i.Name.Equals(request, StringComparison.OrdinalIgnoreCase));
+                case Inventory: selectedItem = _playerManager.Player.Inventory.Items.FirstOrDefault(i => i.Name.Equals(request, StringComparison.OrdinalIgnoreCase)); break;
+                case Equipped: selectedItem = _playerManager.Player.Equipped.Items.FirstOrDefault(i => i.Name.Equals(request, StringComparison.OrdinalIgnoreCase)); break;
+                case RoomItems: selectedItem = _roomManager.Room.DroppedLoot.Items.FirstOrDefault(i => i.Name.Equals(request, StringComparison.OrdinalIgnoreCase)); break;
             }
             return selectedItem;
         }
 
         public bool IsItemEquipped(Item item)
         {
-            return(_playerManager.Player.Equipped.Values.Contains(item));
+            return(_playerManager.Player.Equipped.Items.Contains(item));
         }
 
         
@@ -85,6 +95,22 @@ namespace ConsoleRpg.Helpers.EntityHelper
                         _playerManager.Player.Inventory.Items = _playerManager.Player.Inventory.Items.OrderByDescending(i => i.Weight).ToList();
                     else
                         _playerManager.Player.Inventory.Items = _playerManager.Player.Inventory.Items.OrderBy(i => i.Weight).ToList();
+                    break;
+                case "t":
+                    _playerManager.Player.Inventory.Items =
+                        _playerManager.Player.Inventory.Items
+                            .OrderByDescending(i => i.ItemCategory)
+                            .ThenByDescending(i =>
+                                i is Equipment e
+                                    ? (EquipmentSlot?)e.Slot
+                                    : null
+                            )
+                            .ThenByDescending(i =>
+                                i is Consumable c
+                                    ? (ConsumableType?)c.ConsumableType
+                                    : null
+                            )
+                            .ToList();
                     break;
             }
         }
@@ -144,28 +170,12 @@ namespace ConsoleRpg.Helpers.EntityHelper
             }
             else if (item is Equipment equipment)
             {
-                if (equipment.Slot.HasValue && _playerManager.Player.Equipped.ContainsKey(equipment.Slot.Value))
-                {
-                    // Unequip the currently equipped item in this slot
-                    var currentlyEquipped = _playerManager.Player.Equipped[equipment.Slot.Value];
-                    string unequipMessage = UnequipItem(currentlyEquipped);
-                    List<string> equipMessage = EquipItem(equipment);
-                    messages.Add(unequipMessage);
-                    foreach (var message in equipMessage)
-                    {
-                        messages.Add(message);
-                    }
-                    return messages;
-                }
-                else
-                {
-                    List<string> equipMessage = EquipItem(equipment);
-                    foreach (var message in equipMessage)
-                    {
-                        messages.Add(message);
-                    }
-                    return messages;
-                }
+                // Equip the new item
+                List<string> equipMessages = EquipItem(equipment);
+                messages.AddRange(equipMessages);
+
+                return messages;
+
             }
             if (item is Spellbook spellbook)
             {
@@ -197,40 +207,37 @@ namespace ConsoleRpg.Helpers.EntityHelper
         private List<string> EquipItem(Equipment item)
         {
             var messages = new List<string>();
+            var equipped = _playerManager.Player.Equipped;
 
-            var targetSlot = item.Slot.Value;
-            if (_playerManager.Player.Equipped.TryGetValue(targetSlot, out var currentlyEquipped) && currentlyEquipped != null)
+            Equipment? currentlyEquipped = equipped.GetEquipmentFromSlot(item.Slot.ToString());
+            // Weight check        
+            if (equipped.EquipmentWeight + item.Weight - currentlyEquipped.Weight > _playerManager.Player.EquipmentCarryLimit)
+            {
+                messages.Add($"{_playerManager.Player.Name} cannot equip {item.Name}. Exceeds equipment carry weight limit.");
+                return messages;
+            }
+            
+            // Unequip the current item in that slot, if any
+            if (currentlyEquipped != null)
             {
                 string unequipMessage = UnequipItem(currentlyEquipped);
                 messages.Add(unequipMessage);
             }
 
-            var currentlyEquippedWeight = _playerManager.Player.Equipped.Values.Where(e => e != null).Sum(e => e.Weight);
-            if (currentlyEquippedWeight + item.Weight > _playerManager.Player.EquipmentCarryLimit)
-            {
 
-                messages.Add($"{_playerManager.Player.Name} cannot equip {item.Name}. Exceeds equipment carry weight limit.");
-                return messages;
-                
-            }
-           
-            _playerManager.Player.Equipped.Add(targetSlot, item);
+            // Equip new
+            equipped.AssignEquipmentToSlot(item);
             _playerManager.Player.Inventory.Items.Remove(item);
-
-            messages.Add($"{item.Name} equipped in {targetSlot} slot.");
+            messages.Add($"{item.Name} equipped in {item.Slot} slot.");
             return messages;
-
         }
+
         public string UnequipItem(Equipment item)
         {
-            var itemToRemove = ItemSelector(item.Name);
-            _playerManager.Player.Inventory.Items.Add(itemToRemove);
-            if (itemToRemove is Equipment eq) { 
-            _playerManager.Player.Equipped.Remove(eq.Slot.Value);
-            }
-            return($"{item.Name} unequipped from {item.Slot}.");
-
-
+            var itemToRemove = _playerManager.Player.Equipped.GetEquipmentFromSlot(item.Slot.ToString());
+            _playerManager.Player.Equipped.ClearSlot(itemToRemove.Slot.ToString());
+            _playerManager.Player.Inventory.Items.Add(itemToRemove); 
+            return($"{item.Name} unequipped from {item.Slot.ToString}.");
         }
 
         private string Consume(Consumable consumable)
@@ -268,10 +275,44 @@ namespace ConsoleRpg.Helpers.EntityHelper
                         
                     }
                     break;
-                   
+                //TODO: add mana logic
             }
             return ("Unknown consumable type.");
         }
+
+        public Item GetRandomConsumable(string rarity)
+        {
+            var possibleItems = _context.Items
+                .Where(i => i.ItemCategory == "Consumable" && i.Rarity == rarity)
+                .ToList();
+
+            if (possibleItems.Count == 0)
+                return null; 
+
+            int index = _rng.Next(possibleItems.Count);
+            return possibleItems[index];
+        }
+
+        internal Item GetRandomEquipment(string rarity)
+        {
+            var possibleItems = _context.Items
+                .Where(i => i.ItemCategory == "Equipment" && i.Rarity == rarity)
+                .ToList();
+
+            if (possibleItems.Count == 0)
+                return null;
+
+            int index = _rng.Next(possibleItems.Count);
+            return possibleItems[index];
+        }
+
+        internal Item GetRandomSpellbook()
+        {
+            var spellbooks = _context.Items.Where(i => i.ItemCategory == "Spellbook").ToList();
+            int index = _rng.Next(spellbooks.Count);
+            return spellbooks[index];
+        }
+
         
     }
 }

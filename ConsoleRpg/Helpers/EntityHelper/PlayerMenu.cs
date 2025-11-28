@@ -1,4 +1,5 @@
-﻿using ConsoleRpgEntities.Models.Characters;
+﻿using ConsoleRpg.Helpers.Menus;
+using ConsoleRpgEntities.Models.Characters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,37 +21,63 @@ namespace ConsoleRpg.Helpers.EntityHelper
             _playerManager = playerManager;
         }
 
-        public void MainMenu()
+        public void MainMenu(GameLoopMenu menu)
         {
-            bool exitMenu = false;
-            while (!exitMenu)
+            while (true)
             {
-                _outputManager.Clear();
-                _outputManager.WriteLine(_playerManager.Player.ToString());
-                _outputManager.WriteLine("");
-                _outputManager.WriteLine("1. Level Attributes");
-                _outputManager.WriteLine("2. View Abilities");
-                _outputManager.WriteLine("3. Back to Main Menu");
-                _outputManager.Write(">> ");
-                _outputManager.Display();
-                var menuChoice = Console.ReadLine();
-                if (menuChoice == "1")
+                menu.SetMenuStateandRefresh("hero");
+                var choice = Console.ReadLine();
+                if (choice == "b")
+                {
+                    menu.SetMenuStateandRefresh("default");
+                    break;
+                }
+                else if (choice == "p")
+                {
+                    _outputManager.WriteLine(_playerManager.Player.ToString());
+                    _outputManager.WriteLine("Press any key to return...");
+                    Console.ReadKey();
+
+                }
+                else if (choice == "g")
+                {
+                    HandleGear(menu);
+                }
+                else if (choice == "a")
                 {
                     InteractWithAttributeMenu();
                 }
-                else if (menuChoice == "2")
+                else if(choice == "s")
                 {
                     DisplayAbilitiesMenu(_playerManager.Player);
                 }
-                else if (menuChoice == "3")
-                {
-                    exitMenu = true; // go back to main menu
-                }
                 else
                 {
-                    _outputManager.WriteLine("Invalid entry", ConsoleColor.Red);
-                    _outputManager.Display();
-                    Thread.Sleep(1000);
+                    menu.AddEventandRefresh("Invalid Selection");
+                }
+            }
+        }
+
+        private void HandleGear(GameLoopMenu menu)
+        {
+            while (true)
+            {
+                menu.SetMenuStateandRefresh("gear");
+                var choice = Console.ReadLine();
+                if (choice == "b")
+                {
+                    break;
+                }
+                else if (choice == "e") {
+                    _inventoryManager.ViewEquippedItems();
+                }
+                else if (choice == "a")
+                {
+                    _inventoryManager.ViewEquippableItems();
+                }
+                else {
+                    menu.AddEventandRefresh("Invalid selection.");
+                    continue;
                 }
             }
         }
@@ -150,53 +177,7 @@ namespace ConsoleRpg.Helpers.EntityHelper
 
         public void DisplayAbilitiesMenu(Player player)
         {
-            // 1. Fetch the player's abilities
-            var abilities = player.Abilities.ToList();
-
-            // Check if the player has any abilities
-            if (abilities == null || !abilities.Any())
-            {
-                _outputManager.WriteLine("You have no abilities to display!", ConsoleColor.Red);
-                _outputManager.Display();
-                Thread.Sleep(1000);
-                return;
-            }
-
-            _outputManager.Clear();
-            _outputManager.WriteLine("--- Player Abilities ---", ConsoleColor.Cyan);
-
-            // 2. Define the Column Headers and Spacing
-            // We'll use fixed spacing for neat alignment.
-            // Columns: [ID] [NAME] [DESCRIPTION] [TYPE] [MANA COST]
-            string headerFormat = "{0,-3} | {1,-20} | {2,-65} | {3,-10} | {4,-10}";
-
-            // Display the Header Row
-            _outputManager.WriteLine(
-                string.Format(headerFormat, "ID", "Name", "Description", "Type", "Mana Cost"),
-                ConsoleColor.Yellow);
-
-            // Draw a Separator Line
-            _outputManager.WriteLine(new string('-', 120), ConsoleColor.DarkGray);
-
-            // 3. Loop Through and Display Abilities
-            int counter = 1;
-            foreach (var ability in abilities)
-            {
-                // Use a different color for the actual data
-                _outputManager.WriteLine(
-                    string.Format(
-                        headerFormat,
-                        ability.Id, // Display 1-based index instead of the raw ID for the menu
-                        ability.Name,
-                        // Truncate the description if it's too long for the column
-                        (ability.Description.Length > 62 ? ability.Description.Substring(0, 62) + "..." : ability.Description),
-                        ability.AbilityType,
-                        ability.ManaCost
-                    ));
-            }
-
-            // 4. Prompt for exit
-            _outputManager.WriteLine(new string('-', 120), ConsoleColor.DarkGray);
+            if (!_playerManager.DisplayAbilities(_outputManager)) return; 
             _outputManager.WriteLine("Press any key to return to the Player Menu...", ConsoleColor.Green);
             _outputManager.Display(); // Ensure all output is flushed to the console
             Console.ReadKey(true);

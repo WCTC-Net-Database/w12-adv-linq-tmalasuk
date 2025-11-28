@@ -1,7 +1,7 @@
 ﻿using System.Xml.Serialization;
 using ConsoleRpgEntities.Models.Characters;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using static ConsoleRpgEntities.Models.Equipments.Enums;
+using static ConsoleRpgEntities.Models.Enums;
 
 namespace ConsoleRpgEntities.Models.Equipments;
 
@@ -15,7 +15,7 @@ public class Consumable : Item
     public override string ToString()
     {
         string stat = $"{Value}";
-        if (this.ConsumableType != ConsumableType.Heal){
+        if (this.ConsumableType != ConsumableType.Heal && this.ConsumableType != ConsumableType.Mana){
             stat += $" / {BuffDuration} turns";
         }
 

@@ -1,6 +1,7 @@
 ﻿using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
+using ConsoleRpgEntities.Models.Containers;
 using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Items;
 using ConsoleRpgEntities.Models.Rooms;
@@ -18,6 +19,8 @@ namespace ConsoleRpgEntities.Data
         public DbSet<Ability> Abilities { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<Equipment> Equipments { get; set; }
+
+        public DbSet<RoomItems> RoomItems { get; set; }
 
         public DbSet<Room> Rooms { get; set; }
 
@@ -111,9 +114,21 @@ namespace ConsoleRpgEntities.Data
                 .HasForeignKey<Inventory>(i => i.PlayerId);
 
             modelBuilder.Entity<Player>()
+                .HasOne(p => p.Equipped)
+                .WithOne(i => i.Player)
+                .HasForeignKey<Equipped>(i => i.PlayerId);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.DroppedLoot)
+                .WithOne(r => r.Room)
+                .HasForeignKey<RoomItems>(r => r.RoomId);
+
+            modelBuilder.Entity<Player>()
                 .Property(p => p.classType)
                 .HasConversion<string>()
                 .HasColumnName("ClassType");
+
+
 
             // Call the separate configuration method to set up Equipment entity relationships
             ConfigureEquipmentRelationships(modelBuilder);
@@ -137,6 +152,7 @@ namespace ConsoleRpgEntities.Data
             modelBuilder.ApplyConfiguration(new ArmoryConfig());
             modelBuilder.ApplyConfiguration(new GardenConfig());
             modelBuilder.ApplyConfiguration(new SpellbookConfig());
+            modelBuilder.ApplyConfiguration(new MonsterConfig());
         }
 
         private void ConfigureEquipmentRelationships(ModelBuilder modelBuilder)

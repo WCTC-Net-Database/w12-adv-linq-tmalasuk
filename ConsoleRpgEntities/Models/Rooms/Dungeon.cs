@@ -1,5 +1,4 @@
 ﻿using ConsoleRpgEntities.Models.Characters;
-using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Rooms.Interfaces;
 using System;
 using System.Collections.Generic;

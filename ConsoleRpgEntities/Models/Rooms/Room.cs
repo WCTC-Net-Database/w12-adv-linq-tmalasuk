@@ -1,5 +1,7 @@
 ﻿using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
+using ConsoleRpgEntities.Models.Containers;
+using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Rooms.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -26,6 +28,12 @@ namespace ConsoleRpgEntities.Models.Rooms
         [NotMapped] public Room? Down { get; set; }
         public List<Player> PlayersInRoom { get; set; } = new();
         public List<Monster> MonstersInRoom { get; set; } = new();
+        public RoomItems DroppedLoot { get; set; } 
+
+        public Room()
+        {           
+            
+        }
 
         public Dictionary<string, Room> GetAvailablePaths()
         {

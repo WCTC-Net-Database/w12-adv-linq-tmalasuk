@@ -1,4 +1,5 @@
-﻿using ConsoleRpgEntities.Models.Equipments;
+﻿using ConsoleRpgEntities.Models;
+using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -12,6 +13,8 @@ public class EquipmentConfig : IEntityTypeConfiguration<Equipment>
 {
     public void Configure(EntityTypeBuilder<Equipment> builder)
     {
+
+        //TODO: CALIBRATE VALUE BECAUSE THEYRE CRAZY RIGHT NOW
         //common
         builder.HasData(
         // ---------------------------

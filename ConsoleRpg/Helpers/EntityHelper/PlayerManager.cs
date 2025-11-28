@@ -1,14 +1,14 @@
 ﻿using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Models;
+using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
-
-using ConsoleRpgEntities.Models.Equipments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using static ConsoleRpgEntities.Models.Equipments.Enums;
-using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
+using static ConsoleRpgEntities.Models.Enums;
 
 namespace ConsoleRpg.Helpers.EntityHelper
 {
@@ -23,7 +23,7 @@ namespace ConsoleRpg.Helpers.EntityHelper
 
         public void CreatePlayer(string name, string playerClass)
         {
-            var newPlayer = new Player(name, (ConsoleRpgEntities.Models.Equipments.Enums.PlayerClass)Enum.Parse(typeof(ConsoleRpgEntities.Models.Equipments.Enums.PlayerClass), playerClass));
+            var newPlayer = new Player(name, (Enums.PlayerClass)Enum.Parse(typeof(Enums.PlayerClass), playerClass));
 
             newPlayer.CurrentRoom = Context.Rooms.First(r => r.Id == 1);
             Context.Players.Add(newPlayer);
@@ -114,13 +114,13 @@ namespace ConsoleRpg.Helpers.EntityHelper
 
             // Define column widths
             const int nameWidth = 15;
-            const int classWidth = 10;
-            const int levelWidth = 5;
-            const int healthWidth = 10;
-            const int manaWidth = 10;
-            const int strWidth = 5;
-            const int agiWidth = 5;
-            const int intWidth = 5;
+            const int classWidth = 8;
+            const int levelWidth = 3;
+            const int healthWidth = 5;
+            const int manaWidth = 5;
+            const int strWidth = 3;
+            const int agiWidth = 3;
+            const int intWidth = 3;
 
             
 
@@ -140,7 +140,7 @@ namespace ConsoleRpg.Helpers.EntityHelper
 
             }
 
-            return sb.ToString();
+            return sb.ToString().TrimEnd();
         }
 
         public string BuildAttributeTable()
@@ -180,6 +180,52 @@ namespace ConsoleRpg.Helpers.EntityHelper
 
             return sb.ToString();
 
+        }
+
+        public bool DisplayAbilities(OutputManager outputManager, int menuBelow = 0){
+            var abilities = Player.Abilities.ToList();
+
+            // Check if the player has any abilities
+            if (abilities == null || !abilities.Any())
+            {
+                outputManager.DisplayErrorBelow("No spells to display", menuBelow);
+                return false;
+            }
+
+            outputManager.Clear();
+            outputManager.WriteLine("--- Player Spells ---", ConsoleColor.Cyan);
+
+            // 2. Define the Column Headers and Spacing
+            // We'll use fixed spacing for neat alignment.
+            // Columns: [ID] [NAME] [DESCRIPTION] [TYPE] [MANA COST]
+            string headerFormat = "{0,-3} | {1,-20} | {2,-65} | {3,-10} | {4,-10}";
+
+            // Display the Header Row
+            outputManager.WriteLine(
+                string.Format(headerFormat, "ID", "Name", "Description", "Type", "Mana Cost"),
+                ConsoleColor.Yellow);
+
+            // Draw a Separator Line
+            outputManager.WriteLine(new string('-', 120), ConsoleColor.DarkGray);
+
+            // 3. Loop Through and Display Abilities
+            int counter = 1;
+            foreach (var ability in abilities)
+            {
+                // Use a different color for the actual data
+                outputManager.WriteLine(
+                    string.Format(
+                        headerFormat,
+                        ability.Id, // Display 1-based index instead of the raw ID for the menu
+                        ability.Name,
+                        // Truncate the description if it's too long for the column
+                        (ability.Description.Length > 62 ? ability.Description.Substring(0, 62) + "..." : ability.Description),
+                        ability.AbilityType,
+                        ability.ManaCost
+                    ));
+            }
+            outputManager.Display();
+            return true;
         }
     }
 }
