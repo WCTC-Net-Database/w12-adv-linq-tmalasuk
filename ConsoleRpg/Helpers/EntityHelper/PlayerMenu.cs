@@ -21,7 +21,7 @@ namespace ConsoleRpg.Helpers.EntityHelper
             _playerManager = playerManager;
         }
 
-        public void MainMenu(GameLoopMenu menu)
+        public void MainMenu(GameLoopMenu menu, InventoryMenu invMenu)
         {
             while (true)
             {
@@ -44,7 +44,7 @@ namespace ConsoleRpg.Helpers.EntityHelper
                 }
                 else if (choice == "g")
                 {
-                    HandleGear(menu);
+                    HandleGear(menu, invMenu);
                 }
                 else if (choice == "a")
                 {
@@ -61,7 +61,7 @@ namespace ConsoleRpg.Helpers.EntityHelper
             }
         }
 
-        private void HandleGear(GameLoopMenu menu)
+        private void HandleGear(GameLoopMenu menu, InventoryMenu invMenu)
         {
             while (true)
             {
@@ -72,11 +72,11 @@ namespace ConsoleRpg.Helpers.EntityHelper
                     break;
                 }
                 else if (choice == "e") {
-                    _inventoryManager.ViewEquippedItems();
+                    menu.AddEventsandRefresh(_inventoryManager.ViewEquippedItems(invMenu));
                 }
                 else if (choice == "a")
                 {
-                    _inventoryManager.ViewEquippableItems();
+                    menu.AddEventsandRefresh(_inventoryManager.ViewEquippableItems(invMenu));
                 }
                 else {
                     menu.AddEventandRefresh("Invalid selection.");

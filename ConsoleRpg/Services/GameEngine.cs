@@ -63,6 +63,17 @@ public class GameEngine
 
     private void SetupGame()
     {
+        //for testing
+        //TODO: remove eventually
+        var fiveItems = _context.Items
+            .OrderBy(i => Guid.NewGuid())   // randomize order
+            .Take(5)
+            .ToList();
+
+        foreach (Item item in fiveItems)
+        {
+            _playerManager.Player.Inventory.Items.Add(item);
+        }
         _roomSeeder.LinkRooms(_context);
         
         LoadMonsters();

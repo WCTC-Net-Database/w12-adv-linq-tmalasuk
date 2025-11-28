@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using static ConsoleRpgEntities.Models.Enums;
 
 namespace ConsoleRpg.Helpers.EntityHelper
@@ -37,21 +38,39 @@ namespace ConsoleRpg.Helpers.EntityHelper
             return _playerManager.Player.Inventory.Items.ToList<Item>();
         }
 
-        public void ViewEquippedItems()
+        public List<string> ViewEquippedItems(InventoryMenu invMenu)
         {
-            Console.Clear();
-            Console.WriteLine(_playerManager.Player.Equipped.ToString());
-            Console.WriteLine("Press any key to return...");
-            Console.ReadKey();
+            var messages = new List<string>();
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine(_playerManager.Player.Equipped.ToString(), ConsoleColor.White);
+                Console.WriteLine("[M] Manage [B] Back", ConsoleColor.White);
+                var choice = Console.ReadLine().ToLower();
+                if (choice == "b") return messages;
+                if (choice == "m")
+                {
+                    var msgs = invMenu.ItemListInteract(_playerManager.Player.Equipped.Items.ToList());
+                    foreach (var item in msgs)
+                    {
+                        messages.Add(item);
+
+                    }
+                    return messages;
+                }
+            }
+            
         }
 
-        public List<Item> ViewEquippableItems()
+        public List<string> ViewEquippableItems(InventoryMenu invMenu)
         {
+            var messages = new List<string>();
             var currentWeight = _playerManager.Player.Equipped.EquipmentWeight;
 
             var freeweight = _playerManager.Player.EquipmentCarryLimit - currentWeight;
             var equippableItems = _playerManager.Player.Inventory.Items.Where(i => i.Weight < freeweight && i is Equipment).ToList();
-            return equippableItems;
+            messages.AddRange(invMenu.ItemListInteract(equippableItems));
+            return messages;
         }
 
 

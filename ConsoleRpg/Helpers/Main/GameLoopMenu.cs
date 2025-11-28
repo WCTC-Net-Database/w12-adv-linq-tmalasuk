@@ -92,7 +92,7 @@ namespace ConsoleRpg.Helpers.Menus
                 }
                 else if (input == "h")
                 {
-                    _playerMenu.MainMenu(this);
+                    _playerMenu.MainMenu(this, _inventoryMenu);
                 }
                 else if (input == "m") {
 
