@@ -54,17 +54,17 @@ namespace ConsoleRpg.Helpers.Environments
             monsterHpText = PadVisible(monsterHpText, width - middle - 1, padRight: false);
             playerMpText = PadVisible(playerMpText, width - 2, padRight: true);
 
-            Console.WriteLine($"|{playerHpText}{monsterHpText}|");
-            Console.WriteLine($"|{playerMpText}|");
-            Console.WriteLine(topBorder);
+            Console.WriteLine($"|{playerHpText}{monsterHpText}|", ConsoleColor.White);
+            Console.WriteLine($"|{playerMpText}|", ConsoleColor.White);
+            Console.WriteLine(topBorder, ConsoleColor.White);
 
             // --- Actions ---
             string actions = "Actions: [1] Attack [2] Ability [3] Item";
-            Console.WriteLine($"| {actions.PadRight(width - 3)}|");
-            Console.WriteLine(topBorder);
+            Console.WriteLine($"| {actions.PadRight(width - 3)}|", ConsoleColor.White);
+            Console.WriteLine(topBorder, ConsoleColor.White);
 
             // --- Combat Log ---
-            Console.WriteLine("| Combat Log:".PadRight(width - 1) + "|");
+            Console.WriteLine("| Combat Log:".PadRight(width - 1) + "|", ConsoleColor.White);
             int logStartLine = Console.GetCursorPosition().Top;
 
             for (int i = 0; i < _combatLog.Count - entriesAddedThisRound; i++)
@@ -75,14 +75,14 @@ namespace ConsoleRpg.Helpers.Environments
                 string clean = isSilent ? message.Replace("[SILENT]", "") : message;
                 string line = $"> {clean}";
                 if (line.Length > width - 3) line = line.Substring(0, width - 3);
-                Console.WriteLine($"| {line.PadRight(width - 3)}|");
+                Console.WriteLine($"| {line.PadRight(width - 3)}|", ConsoleColor.White);
             }
 
             // Empty lines for new entries
             for (int i = 0; i < entriesAddedThisRound + 1; i++)
-                Console.WriteLine($"| {"".PadRight(width - 3)}|");
+                Console.WriteLine($"| {"".PadRight(width - 3)}|", ConsoleColor.White);
 
-            Console.WriteLine(topBorder);
+            Console.WriteLine(topBorder, ConsoleColor.White);
             var prePrompt = Console.GetCursorPosition();
 
             // --- Animate Latest Entries ---
@@ -104,14 +104,14 @@ namespace ConsoleRpg.Helpers.Environments
                     if (!isSilent)
                         TypeWriterLine(latestClean, width);
                     else
-                        Console.Write(latestClean);
+                        Console.Write(latestClean, ConsoleColor.White);
                     Thread.Sleep(delay);
                     cursorRow++;
                 }
             }
 
             Console.SetCursorPosition(prePrompt.Left, prePrompt.Top);
-            Console.Write(">> ");
+            Console.Write(">> ", ConsoleColor.White);
             entriesAddedThisRound = 0;
         }
 

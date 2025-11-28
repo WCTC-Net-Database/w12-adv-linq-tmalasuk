@@ -210,15 +210,27 @@ namespace ConsoleRpg.Helpers.EntityHelper
             var equipped = _playerManager.Player.Equipped;
 
             Equipment? currentlyEquipped = equipped.GetEquipmentFromSlot(item.Slot.ToString());
-            // Weight check        
-            if (equipped.EquipmentWeight + item.Weight - currentlyEquipped.Weight > _playerManager.Player.EquipmentCarryLimit)
-            {
-                messages.Add($"{_playerManager.Player.Name} cannot equip {item.Name}. Exceeds equipment carry weight limit.");
-                return messages;
-            }
-            
-            // Unequip the current item in that slot, if any
+            // Weight check
             if (currentlyEquipped != null)
+            {
+                if (equipped.EquipmentWeight + item.Weight - currentlyEquipped.Weight > _playerManager.Player.EquipmentCarryLimit)
+                {
+                    messages.Add($"{_playerManager.Player.Name} cannot equip {item.Name}. Exceeds equipment carry weight limit.");
+                    return messages;
+                }
+            }
+            else
+            {
+                if (equipped.EquipmentWeight + item.Weight > _playerManager.Player.EquipmentCarryLimit)
+                {
+                    messages.Add($"{_playerManager.Player.Name} cannot equip {item.Name}. Exceeds equipment carry weight limit.");
+                    return messages;
+                }
+            }
+
+
+                // Unequip the current item in that slot, if any
+                if (currentlyEquipped != null)
             {
                 string unequipMessage = UnequipItem(currentlyEquipped);
                 messages.Add(unequipMessage);
