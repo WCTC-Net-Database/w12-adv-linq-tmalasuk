@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static ConsoleRpgEntities.Models.Enums;
 
 namespace ConsoleRpgEntities.Models.Containers
 {
@@ -84,6 +85,77 @@ namespace ConsoleRpgEntities.Models.Containers
             }
         }
 
-        
+        public override string ToString()
+        {
+            const int slotW = 7;
+            const int nameW = 20;
+            const int rarityW = 10;
+            const int atkW = 4;
+            const int defW = 4;
+
+            string Line()
+                => "+" + new string('-', slotW + nameW + rarityW + atkW + defW + 16) + "+";
+
+            string Row(string slot, Equipment item)
+            {
+                if (item == null)
+                {
+                    return $"| {slot.PadRight(slotW)}" +
+                           $"| {"---".PadRight(nameW)}" +
+                           $"| {"---".PadRight(rarityW)}" +
+                           $"| {"---".PadRight(atkW)}" +
+                           $"| {"---".PadRight(defW)} |";
+                }
+
+                else if (item.EquipmentType == Enums.EquipmentType.Attack)
+                {
+                    string defense = "0";
+                    return $"| {slot.PadRight(slotW)}" +
+                       $"| {item.Name.PadRight(nameW)}" +
+                       $"| {($"[{item.Rarity}]").PadRight(rarityW)}" +
+                       $"| {item.Value.ToString().PadRight(atkW)}" +
+                       $"| {defense.PadRight(defW)} |";
+                }
+                else
+                {
+                    string attack = "0";
+                    return $"| {slot.PadRight(slotW)}" +
+                       $"| {item.Name.PadRight(nameW)}" +
+                       $"| {($"[{item.Rarity}]").PadRight(rarityW)}" +
+                       $"| {attack.PadRight(atkW)}" +
+                       $"| {item.Value.ToString().PadRight(defW)} |";
+                }                
+                
+            }
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine(Line());
+            sb.AppendLine("|                    Equipped Gear                     |");
+            sb.AppendLine(Line());
+
+            sb.AppendLine($"| {"Slot".PadRight(slotW)}" +
+                          $"| {"Name".PadRight(nameW)}" +
+                          $"| {"Rarity".PadRight(rarityW)}" +
+                          $"| {"ATK".PadRight(atkW)}" +
+                          $"| {"DEF".PadRight(defW)} |");
+
+            sb.AppendLine(Line());
+
+            sb.AppendLine(Row("Head", Head));
+            sb.AppendLine(Row("Chest", Chest));
+            sb.AppendLine(Row("Legs", Legs));
+            sb.AppendLine(Row("Feet", Feet));
+            sb.AppendLine(Row("Hands", Hands));
+            sb.AppendLine(Row("Weapon", Weapon));
+
+            sb.AppendLine(Line());
+
+            return sb.ToString();
+        }
+
+
+
+
     }
 }

@@ -37,9 +37,12 @@ namespace ConsoleRpg.Helpers.EntityHelper
             return _playerManager.Player.Inventory.Items.ToList<Item>();
         }
 
-        public List<Item> ViewEquippedItems()
+        public void ViewEquippedItems()
         {
-            return _playerManager.Player.Equipped.Items.ToList();
+            Console.Clear();
+            Console.WriteLine(_playerManager.Player.Equipped.ToString());
+            Console.WriteLine("Press any key to return...");
+            Console.ReadKey();
         }
 
         public List<Item> ViewEquippableItems()

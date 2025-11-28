@@ -34,8 +34,11 @@ namespace ConsoleRpg.Helpers.EntityHelper
                 }
                 else if (choice == "p")
                 {
-                    _outputManager.WriteLine(_playerManager.Player.ToString());
-                    _outputManager.WriteLine("Press any key to return...");
+                    _outputManager.Clear();
+                    var heroDetails = _playerManager.Player.ToString().TrimEnd().Split(Environment.NewLine);
+                    string[] boxedHero = _outputManager.BoxPanel(heroDetails);
+                    string[] menuOptions = { "", "Press any key to return..." };
+                    _outputManager.PrintSideBySide(boxedHero, menuOptions, 2);
                     Console.ReadKey();
 
                 }
